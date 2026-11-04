@@ -41,7 +41,9 @@ Please refer to the Policy Document for complete terms, conditions, and exclusio
 9. Cumulative Bonus: 5% increase in Sum Insured for each claim-free year up to a maximum of 50%.
 10. Waiting Periods: Initial 30 days (Excl03), 24 months for specified diseases (Excl02), and 48 months for Pre-Existing Diseases (Excl01).
 """
-    page1.insert_text((50, 60), p1_text, fontsize=9.5, fontname="helv", lineheight=1.4)
+    page1.insert_textbox(
+        pymupdf.Rect(50, 60, 545, 800), p1_text, fontsize=9.5, fontname="helv", lineheight=1.4
+    )
 
     # -------------------------------- Page 2: Schedule of Benefits (with Table)
     page2: Any = doc.new_page(width=595, height=842)
@@ -49,7 +51,9 @@ Please refer to the Policy Document for complete terms, conditions, and exclusio
 TABLE OF BENEFITS AND SUB-LIMITS APPLICABLE ACROSS PLAN VARIANTS
 
 The following schedule sets forth the maximum limits of indemnity payable under the policy."""
-    page2.insert_text((50, 60), p2_head, fontsize=10, fontname="helv", lineheight=1.4)
+    page2.insert_textbox(
+        pymupdf.Rect(50, 60, 545, 125), p2_head, fontsize=10, fontname="helv", lineheight=1.4
+    )
 
     # Draw tabular grid on page 2
     table_rect = pymupdf.Rect(50, 130, 545, 320)
@@ -87,7 +91,13 @@ The following schedule sets forth the maximum limits of indemnity payable under 
 
     footnotes = """* Note: Proportionate deduction applies to associate medical expenses if room category higher than eligibility is opted.
 ** Modern Treatments include robotic surgeries, balloon sinuplasty, immunotherapy, deep brain stimulation, and stem cell therapy."""
-    page2.insert_text((50, 335), footnotes, fontsize=8, fontname="helv", color=(0.3, 0.3, 0.3))
+    page2.insert_textbox(
+        pymupdf.Rect(50, 335, 545, 450),
+        footnotes,
+        fontsize=8,
+        fontname="helv",
+        color=(0.3, 0.3, 0.3),
+    )
 
     # -------------------------------- Page 3: Definitions
     page3: Any = doc.new_page(width=595, height=842)
@@ -104,7 +114,9 @@ The following schedule sets forth the maximum limits of indemnity payable under 
 2.9 Pre-Existing Disease (PED): Pre-existing disease means any condition, ailment, injury or disease that is diagnosed by a physician within 48 months prior to the effective date of the policy issued by the insurer or for which medical advice or treatment was recommended by, or received from, a physician within 48 months prior to the effective date of the policy.
 2.10 Proportionate Deduction: If the Insured occupies a room category higher than the eligible room category, the associated medical expenses (excluding medicine, implants, and consumables) shall be paid in the proportion of eligible room rent to actual room rent incurred.
 """
-    page3.insert_text((50, 60), p3_text, fontsize=9, fontname="helv", lineheight=1.4)
+    page3.insert_textbox(
+        pymupdf.Rect(50, 60, 545, 800), p3_text, fontsize=9, fontname="helv", lineheight=1.4
+    )
 
     # -------------------------------- Page 4: Base Coverage & Optional Riders
     page4: Any = doc.new_page(width=595, height=842)
@@ -133,7 +145,9 @@ SECTION 4: OPTIONAL RIDERS & ADD-ON COVERS
 4.1 Hospital Daily Cash Benefit:
 Optional rider providing a daily allowance of ₹1,000 per day for each continuous 24 hours of hospitalization, up to a maximum of 30 days per policy year.
 """
-    page4.insert_text((50, 60), p4_text, fontsize=9, fontname="helv", lineheight=1.4)
+    page4.insert_textbox(
+        pymupdf.Rect(50, 60, 545, 800), p4_text, fontsize=9, fontname="helv", lineheight=1.4
+    )
 
     # -------------------------------- Page 5: Waiting Periods & Permanent Exclusions
     page5: Any = doc.new_page(width=595, height=842)
@@ -168,7 +182,9 @@ The Company shall not be liable to make any payment under this policy in respect
 6.10 Code-Excl17 (Sterility and Infertility): Assisted reproductive services and IVF.
 6.11 Code-Excl18 (Maternity): Medical treatment expenses traceable to childbirth or pregnancy.
 """
-    page5.insert_text((50, 60), p5_text, fontsize=8.8, fontname="helv", lineheight=1.35)
+    page5.insert_textbox(
+        pymupdf.Rect(50, 60, 545, 800), p5_text, fontsize=8.8, fontname="helv", lineheight=1.35
+    )
 
     # -------------------------------- Page 6: Cost Sharing & Claims / Grievance
     page6: Any = doc.new_page(width=595, height=842)
@@ -191,7 +207,9 @@ Notice of claim must be given within 24 hours of admission. Duly completed claim
 8.3 Grievance Redressal Mechanism & Insurance Ombudsman:
 If the Insured is not satisfied with the grievance resolution by the Company within 15 days, they may approach the Insurance Ombudsman appointed under the Insurance Ombudsman Rules, 2017. Policyholders may also lodge complaints on the IRDAI Bima Bharosa portal (bimabharosa.irdai.gov.in) or call toll-free 155255.
 """
-    page6.insert_text((50, 60), p6_text, fontsize=9, fontname="helv", lineheight=1.4)
+    page6.insert_textbox(
+        pymupdf.Rect(50, 60, 545, 800), p6_text, fontsize=9, fontname="helv", lineheight=1.4
+    )
 
     doc.save(str(output_path))
     doc.close()
@@ -215,7 +233,9 @@ CUSTOMER INFORMATION SHEET (CIS) & SUMMARY OF BENEFITS
 5. Permanent Partial Disablement (PPD): Up to 50% of Sum Insured as per specified benefit table.
 6. Temporary Total Disablement (TTD): 0.2% of Sum Insured per week up to ₹10,000 per week for 100 weeks.
 """
-    page1.insert_text((50, 60), p1, fontsize=9.5, fontname="helv", lineheight=1.4)
+    page1.insert_textbox(
+        pymupdf.Rect(50, 60, 545, 800), p1, fontsize=9.5, fontname="helv", lineheight=1.4
+    )
 
     page2: Any = doc.new_page(width=595, height=842)
     p2 = """SECTION 1: BASE COVERAGE (SCOPE OF COVER)
@@ -232,7 +252,9 @@ SECTION 3: PERMANENT EXCLUSIONS
 3. Participation in hazardous or adventure sports without prior written underwriting approval.
 4. Injuries sustained under the influence of intoxicating liquor or drugs.
 """
-    page2.insert_text((50, 60), p2, fontsize=9.5, fontname="helv", lineheight=1.4)
+    page2.insert_textbox(
+        pymupdf.Rect(50, 60, 545, 800), p2, fontsize=9.5, fontname="helv", lineheight=1.4
+    )
 
     page3: Any = doc.new_page(width=595, height=842)
     p3 = """SECTION 4: CLAIMS PROCEDURE & OMBUDSMAN REDRESSAL
@@ -240,7 +262,9 @@ Written notice of claim must be given within 30 days of death or injury.
 Submit completed claim form, death certificate, police FIR, post-mortem report, and identity proof.
 If unresolved, complaints may be escalated to the Insurance Ombudsman under IRDAI guidelines.
 """
-    page3.insert_text((50, 60), p3, fontsize=9.5, fontname="helv", lineheight=1.4)
+    page3.insert_textbox(
+        pymupdf.Rect(50, 60, 545, 800), p3, fontsize=9.5, fontname="helv", lineheight=1.4
+    )
 
     doc.save(str(output_path))
     doc.close()

@@ -23,6 +23,6 @@ test-results/
 .env
 logs/*.jsonl
 data/qdrant_storage/
-data/cache/crops/*.png
-data/cache/tables/*.json
-data/cache/embeddings/*.json
+data/cache/
+data/*.pdf
+logs/

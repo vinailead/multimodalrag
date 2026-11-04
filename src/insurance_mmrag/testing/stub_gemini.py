@@ -44,13 +44,24 @@ def _approx_tokens(text: str) -> int:
     return max(1, math.ceil(len(text) / 4))
 
 
+def _clean_cell(raw: str) -> str:
+    s = re.sub(r"(?<=[a-z])(?=[A-Z])", " ", raw)
+    s = re.sub(r"(?<=[a-z])(?=per\b|per[A-Z])", " ", s, flags=re.I)
+    s = re.sub(r"(?<=\d)(?=[A-Za-z])", " ", s)
+    s = re.sub(r"(?<=[A-Za-z])(?=\d)", " ", s)
+    s = re.sub(r"\s*·\s*", "₹", s)
+    s = re.sub(r"(\d)\s*,\s*(\d)", r"\1,\2", s)
+    s = re.sub(r"\s+", " ", s)
+    return s.strip()
+
+
 def _parse_rows(raw: str) -> list[list[str]]:
     data: object = json.loads(raw)
     rows: list[list[str]] = []
     if isinstance(data, list):
         for row in cast(list[object], data):
             if isinstance(row, list):
-                rows.append([str(c).strip() for c in cast(list[object], row)])
+                rows.append([_clean_cell(str(c or "").strip()) for c in cast(list[object], row)])
     return rows
 
 
@@ -171,14 +182,18 @@ class StubGeminiClient:
         covered: set[str] = set()
         sentences: list[str] = []
         for ev in selected:
-            best = max(
-                (s.strip() for s in _SENTENCE_RE.split(ev.text) if s.strip()),
-                key=lambda s: len(q_tokens & set(tokenize(s))),
-                default="",
-            )
-            if best:
-                sentences.append(f"{best} [{ev.evidence_id}]")
-            covered |= q_tokens & set(tokenize(ev.text))
+            clean_text = ev.text.strip()
+            if len(clean_text) <= 500:
+                sentences.append(f"{clean_text} [{ev.evidence_id}]")
+            else:
+                rel = [
+                    s.strip()
+                    for s in _SENTENCE_RE.split(clean_text)
+                    if s.strip() and (len(q_tokens & set(tokenize(s))) > 0 or _NUMERIC_RE.search(s))
+                ]
+                chosen = " ".join(rel[:3]) if rel else clean_text[:300]
+                sentences.append(f"{chosen} [{ev.evidence_id}]")
+            covered |= q_tokens & set(tokenize(clean_text))
         grounding = round(len(covered) / len(q_tokens), 4)
 
         corpus = " ".join(ev.text for ev in selected)

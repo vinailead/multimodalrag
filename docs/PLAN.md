@@ -145,12 +145,12 @@ Implement **Module 6 (`ContextAssembler` with CRAG Self-Correction & IRDAI Prece
 - `tests/test_grounded_generation.py`, `tests/test_api_and_cli.py`, `tests/test_mcp_and_benchmark.py`
 
 ### Success Criteria (Self-Verifiable Checkboxes)
-- [ ] **Test**: `uv run pytest tests/test_grounded_generation.py tests/test_mcp_and_benchmark.py -v` passes 100%, verifying:
+- [x] **Test**: `uv run pytest tests/test_grounded_generation.py tests/test_mcp_and_benchmark.py -v` passes 100%, verifying:
   - Supported queries return `abstained=False`, `confidence_score >= 0.70`, `trace_spans`, `precedence_check` (`Policy Wordings > CIS Summary`), and verbatim citations.
   - Out-of-scope queries return `abstained=True`, `confidence_score < 0.70`, and the IRDAI indeterminate disclaimer.
   - MCP tools (`query_irdai_policy`, `lookup_irdai_clause`, `inspect_policy_table`, `get_rag_triad_scorecard`) execute deterministically and return valid JSON schemas.
   - RAG Triad Benchmark computes `context_recall_at_k`, `answer_faithfulness`, `abstention_f1`, and `table_numerical_exactness` all $\ge 0.85$.
-- [ ] **API Verification (`TestClient`)**: `uv run pytest tests/test_api_and_cli.py -v` passes 100%, verifying:
+- [x] **API Verification (`TestClient`)**: `uv run pytest tests/test_api_and_cli.py -v` passes 100%, verifying:
   - `GET /api/v1/health` $\rightarrow$ `200 OK`
   - `GET /api/v1/policies` $\rightarrow$ `200 OK`
   - `POST /api/v1/ingest` $\rightarrow$ `200 OK`
@@ -159,9 +159,9 @@ Implement **Module 6 (`ContextAssembler` with CRAG Self-Correction & IRDAI Prece
   - `GET /api/v1/governance/audit` $\rightarrow$ `200 OK`
   - `GET /api/v1/benchmark/scorecard` $\rightarrow$ `200 OK`
   - `GET /api/v1/mcp/tools` $\rightarrow$ `200 OK`
-- [ ] **CLI Command**: `uv run mmrag --help` and `uv run mmrag query "What is the waiting period for cataract surgery?" --stub` exit with code `0`.
-- [ ] **Quality Gate**: `uv run ruff check`, `uv run pyright`, `uv run bandit`, and `uv run pytest --cov=src/insurance_mmrag --cov-fail-under=80` all exit with code `0`.
-- [ ] **Recursive Update**: Record API payload contracts, MCP tool specs, and benchmark metrics in `docs/RECURSIVE_WORKFLOW_LOG.md` and update `docs/STATUS.md`.
+- [x] **CLI Command**: `uv run mmrag --help` and `uv run mmrag query "What is the waiting period for cataract surgery?" --stub` exit with code `0`.
+- [x] **Quality Gate**: `uv run ruff check`, `uv run pyright`, `uv run bandit`, and `uv run pytest --cov=src/insurance_mmrag --cov-fail-under=80` all exit with code `0`.
+- [x] **Recursive Update**: Record API payload contracts, MCP tool specs, and benchmark metrics in `docs/RECURSIVE_WORKFLOW_LOG.md` and update `docs/STATUS.md`.
 
 ---
 

@@ -34,3 +34,17 @@ This file implements the **Recursive Workflow Planning** memory loop. Every time
   2. Implemented `HybridVectorStore` using `QdrantClient.query_points` and BM25Okapi with Reciprocal Rank Fusion (RRF), clause boosts (+0.05 for `Excl01`–`Excl18`), and table boosts (+0.02).
   3. Added `typings/rank_bm25/__init__.pyi` with `stubPath = "typings"` in `pyproject.toml`.
   4. Verified all 50 unit and integration tests at 97.18% coverage.
+
+---
+
+## Log Entry #008 — Phase 5 Context Assembly, Grounded Generation, Benchmark Scorecard, MCP & FastAPI
+- **Timestamp**: `2026-11-04T09:30:00+05:30`
+- **Observation**:
+  1. Starlette/FastAPI `TestClient` methods (`.get()`, `.post()`) return partially dynamic types in strict Pyright unless explicitly cast or typed as `httpx.Client`. Casting `TestClient(app)` to `httpx.Client` ensures zero type warnings across all test suites.
+  2. In PyMuPDF, inserting text via `page.insert_text((x, y), ...)` does not wrap long lines, which caused right-edge clipping on paragraphs and tables. Switching to `page.insert_textbox(rect, ...)` ensures automatic multi-line wrapping and preserves all factual numbers (such as `100% of Sum Insured` for AYUSH in-patient treatments).
+  3. Cell tables extracted via `pymupdf.find_tables()` occasionally merge adjacent words without spaces (e.g. `CataractperEye`). Adding `_clean_cell` in the model stub and normalizing numbers in `BenchmarkRunner` prevents false negative numerical mismatch while retaining strict numerical exactness verification.
+  4. Root waterfall execution spans (`pipeline.query` and `generation.grounded_synthesis`) must be populated into the response model upon outer context exit so the complete OpenTelemetry execution waterfall includes every phase from intent routing through synthesis.
+- **Recursive Action Taken**:
+  1. Updated `sample_policy_factory.py` to use `insert_textbox` with page-margin bounding boxes across all policy documents.
+  2. Implemented `ContextAssembler` (parent promotion, 1-hop cross-reference expansion, CRAG sub-query hops), `GroundedGenerator` (calibrated confidence, $< 0.70$ abstention, citations), `MCPToolServer` (4 standard tools), `FastAPI` application (`/api/v1`), `CLI` (`mmrag`), and `BenchmarkRunner` (Quantitative RAG Triad Scorecard).
+  3. Verified 63 unit and integration tests passing at 96.04% coverage with Ruff lint/format clean, Pyright 0 errors, Bandit SAST clean, and pre-commit passing.
