@@ -94,13 +94,13 @@ Implement **Module 2 (`ParentChildChunker` & `CrossReferenceResolver`)** includi
 - `tests/test_table_vision_parser.py`
 
 ### Success Criteria (Self-Verifiable Checkboxes)
-- [ ] **Test**: `uv run pytest tests/test_parent_child_and_crossref.py -v` passes 100%, verifying that:
+- [x] **Test**: `uv run pytest tests/test_parent_child_and_crossref.py -v` passes 100%, verifying that:
   - Every `ChildChunk` has a valid `parent_id` resolving to a complete `ParentChunk`.
   - A coverage clause mentioning *"Subject to Waiting Period Excl01 and Room Rent sub-limit in Schedule of Benefits"* automatically populates `cross_references` with the `parent_id`s of the `Excl01` waiting period section and the `Schedule_of_Benefits` parent.
   - A `CIS_Summary` chunk automatically links to binding `Base_Coverage` and `Waiting_Periods` parents via the IRDAI Legal Precedence rule.
-- [ ] **Test**: `uv run pytest tests/test_table_vision_parser.py -v` passes 100%, verifying that a multi-column Indian Health Insurance Benefit Schedule table produces cropped PNG images, valid Markdown tables with footnotes, synthetic Q&As, and `$0.00` cache hits on repeat runs.
-- [ ] **Quality Gate**: `uv run ruff check`, `uv run pyright`, `uv run bandit`, and `uv run pytest --cov=src/insurance_mmrag --cov-fail-under=80` all exit with code `0`.
-- [ ] **Recursive Update**: Log table footnote and cross-reference edge cases into `docs/RECURSIVE_WORKFLOW_LOG.md` and update `docs/STATUS.md`.
+- [x] **Test**: `uv run pytest tests/test_table_vision_parser.py -v` passes 100%, verifying that a multi-column Indian Health Insurance Benefit Schedule table produces cropped PNG images, valid Markdown tables with footnotes, synthetic Q&As, and `$0.00` cache hits on repeat runs.
+- [x] **Quality Gate**: `uv run ruff check`, `uv run pyright`, `uv run bandit`, and `uv run pytest --cov=src/insurance_mmrag --cov-fail-under=80` all exit with code `0`.
+- [x] **Recursive Update**: Log table footnote and cross-reference edge cases into `docs/RECURSIVE_WORKFLOW_LOG.md` and update `docs/STATUS.md`.
 
 ---
 

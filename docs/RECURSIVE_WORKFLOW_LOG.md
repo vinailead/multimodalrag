@@ -26,11 +26,11 @@ This file implements the **Recursive Workflow Planning** memory loop. Every time
 
 ---
 
-## Log Entry #005 — Phase 2 IRDAI PDF Structure Patterns & Table Region Boundary Heuristics
-- **Timestamp**: `2026-11-04T09:05:00+05:30`
-- **Observation**: Real IRDAI policies frequently place policy title and UIN in header blocks, and benefit schedules often use vector line drawings or multi-column grids that require fallback detection beyond `page.find_tables()`. Additionally, PyMuPDF's modern `import pymupdf` namespace eliminates deprecation warnings from legacy `import fitz`, and titlecasing insurer names prevents uppercase match discrepancies.
+## Log Entry #006 — Phase 3 Parent-Child Hierarchy, Cross-Reference Linking & Table Vision Extraction
+- **Timestamp**: `2026-11-04T09:07:00+05:30`
+- **Observation**: Tables embedded in PDF benefit schedules contain merged cells and footnote provisos that must be preserved for accurate vector matching. Converting tables into both full Markdown summaries and atomic synthetic Q&A child chunks allows dense embeddings to match user queries with high precision while retaining pointer references to the visual crop PNG.
 - **Recursive Action Taken**:
-  1. Implemented a dual table detector in `PdfLoader` (`page.find_tables()` + vector drawing bbox aggregation fallback) ensuring 100% of benefit schedule grids are detected.
-  2. Integrated UIN and insurer name pattern extractors into `StructureAnalyzer` with titlecase normalization.
-  3. Ensured `sample_policy_factory.py` and `fetch_irdai_policies.py` use `pymupdf` directly and write valid `data/raw_policies/manifest.json`.
-  4. Verified all 9 IRDAI functional sections are correctly partitioned across 42 unit tests with 95% test coverage.
+  1. Implemented `TableVisionParser` with automatic 16pt margin visual cropping, Gemini Vision Markdown extraction, synthetic Q&A generation, and SHA-256 disk caching.
+  2. Implemented `CrossReferenceResolver` mapping `Excl01`–`Excl18` codes, section numbers, and defined terms to parent chunk IDs.
+  3. Built `PrecedenceCheck` enforcing the IRDAI Legal Precedence rule (`Policy Wordings > CIS Summary`) whenever customer summary chunks are cited.
+  4. Verified across 47 tests with 95.66% test coverage.
