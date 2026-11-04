@@ -67,7 +67,7 @@ class TableVisionParser:
             return ExtractedTableArtifact.model_validate(cached)
 
         # Vision extraction pass
-        rows_hint = json.dumps(region.raw_rows) if region.raw_rows else "[]"
+        rows_hint = json.dumps(region.raw_rows, ensure_ascii=False) if region.raw_rows else "[]"
         res = self.gateway.generate(
             task="table_extract",
             model=self.model,

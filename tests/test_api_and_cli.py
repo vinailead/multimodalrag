@@ -107,6 +107,16 @@ def test_api_crop_not_found(client: httpx.Client) -> None:
     assert resp.status_code == 404
 
 
+def test_api_manifest_provider_policies(client: httpx.Client) -> None:
+    resp: httpx.Response = client.get("/api/v1/policies")
+    assert resp.status_code == 200
+    policies = cast(list[dict[str, Any]], resp.json())
+    doc_ids = [p["doc_id"] for p in policies]
+    assert "arogya_sanjeevani_national" in doc_ids
+    # Provider policies from manifest are exposed in policies list
+    assert any("hdfc" in d or "optima" in d for d in doc_ids)
+
+
 def test_cli_commands(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
     pdf_path = create_arogya_sanjeevani_pdf(tmp_path / "arogya.pdf")
 

@@ -56,7 +56,14 @@ def _clean_cell(raw: str) -> str:
 
 
 def _parse_rows(raw: str) -> list[list[str]]:
-    data: object = json.loads(raw)
+    try:
+        data: object = json.loads(raw)
+    except Exception:
+        try:
+            cleaned_raw = re.sub(r"\\u(?![0-9a-fA-F]{4})", " ", raw)
+            data = json.loads(cleaned_raw)
+        except Exception:
+            return []
     rows: list[list[str]] = []
     if isinstance(data, list):
         for row in cast(list[object], data):

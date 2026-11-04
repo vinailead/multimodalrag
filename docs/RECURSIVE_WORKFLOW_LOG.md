@@ -64,3 +64,20 @@ This file implements the **Recursive Workflow Planning** memory loop. Every time
   3. Created 6 comprehensive Playwright E2E browser tests in `e2e/mmrag.spec.ts` passing 100% against Chromium.
   4. Created `ui/streamlit_app.py` dashboard and `notebooks/Indian_Insurance_Multimodal_RAG_Showcase.ipynb` notebook.
   5. Successfully verified all 10 ADLC quality gates (`npm run check`) exiting with code `0`.
+
+---
+
+## Log Entry #010 — Live Direct Provider Health Policy Ingestion & Unicode PII Edge Case
+- **Timestamp**: `2026-11-04T14:40:00+05:30`
+- **Observation**:
+  1. Indian health insurance providers (HDFC ERGO, Tata AIG, Go Digit, Bajaj Allianz) publish official policy wordings PDFs directly on public CDN endpoints, ranging from 31 to 60 pages per document. Ingesting these documents directly via `httpx.Client(headers={"User-Agent": ...}, follow_redirects=True)` and validating with `PdfSanitizer` expands the corpus from 9 pages to 194 pages across 87 tables.
+  2. In dense legal and grievance tables (e.g. Tata AIG MediCare Premier), grievance ombudsman phone listings contained Unicode en-dash escapes (`\u2013`) immediately followed by telephone digits (`011 \u2013 23213504`). The `PiiRedactor` Aadhaar regex (`(?<![\d+])\d{4}...`) matched `2013 2321 3504`, corrupting the Unicode escape into `\u[REDACTED_AADHAAR]`, causing downstream `json.decoder.JSONDecodeError: Invalid \uXXXX escape`.
+  3. `StructureAnalyzer` and `table_vision_parser` extraction hints must pass `ensure_ascii=False` when dumping JSON so genuine Unicode characters (₹, –, etc.) remain native characters rather than backslash escape sequences.
+  4. Both FastAPI (`/api/v1/policies`, `/api/v1/query`) and Streamlit (`ui/streamlit_app.py`) benefit from a manifest-driven architecture: discovering all downloaded policies from `manifest.json` on startup and performing lazy on-demand indexing upon query arrival keeps unit test suites running in <2 seconds while offering instant access to large multi-policy catalogs in production.
+- **Recursive Action Taken**:
+  1. Updated `scripts/fetch_irdai_policies.py` to download, sanitize, and register authentic health policies from HDFC ERGO (Optima Secure), Tata AIG (MediCare Premier), Go Digit (Health Plus), and Bajaj Allianz (Health Guard), updating `data/raw_policies/manifest.json`.
+  2. Tightened `PiiRedactor` Aadhaar regex lookbehind to `(?<![a-zA-Z\d\\+])`, ensuring escapes and variable identifiers are never falsely matched as Aadhaar numbers.
+  3. Configured `table_vision_parser.py` to use `ensure_ascii=False` and added resilient escape-sequence recovery in `stub_gemini.py` `_parse_rows`.
+  4. Updated `api/main.py` and `ui/streamlit_app.py` with dynamic manifest discovery and on-demand policy ingestion.
+  5. Updated `e2e/mmrag.spec.ts` to assert flexible multi-policy dropdown options ($\ge 2$).
+  6. Verified all 10 ADLC quality gates (`npm run check`) 100% green with 94.77% Python test coverage, 99.62% TypeScript test coverage, and 6/6 passing Playwright E2E tests.

@@ -56,6 +56,15 @@ def test_does_not_redact_policy_domain_numbers(redactor: PiiRedactor) -> None:
     assert not result.was_redacted
 
 
+def test_does_not_redact_escaped_unicode_or_identifier_subsequences(
+    redactor: PiiRedactor,
+) -> None:
+    # \\u2013 followed by numbers must not corrupt \\u into \\u[REDACTED_AADHAAR]
+    text = r"Delhi 110 002\n\u2013 .\nTel .: 011 \u2013 23213504"
+    result = redactor.redact(text)
+    assert r"\u[REDACTED" not in result.redacted_text
+
+
 @pytest.fixture
 def sanitizer() -> PdfSanitizer:
     return PdfSanitizer(max_size_mb=1)

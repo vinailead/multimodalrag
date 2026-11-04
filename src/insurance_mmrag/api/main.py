@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import logging
 from contextlib import asynccontextmanager
 from pathlib import Path
 from typing import Any
@@ -28,6 +29,7 @@ from insurance_mmrag.schemas import (
 )
 
 # Global pipeline instance
+logger = logging.getLogger(__name__)
 _pipeline: InsuranceMMRAGPipeline | None = None
 _mcp_server: MCPToolServer | None = None
 
@@ -147,7 +149,10 @@ def list_policies() -> list[PolicySummaryItem]:
     pipe = get_pipeline()
     docs = pipe.get_indexed_documents()
     items: list[PolicySummaryItem] = []
+    seen_ids: set[str] = set()
+
     for doc in docs.values():
+        seen_ids.add(doc.structure.doc_id)
         items.append(
             PolicySummaryItem(
                 doc_id=doc.structure.doc_id,
@@ -160,6 +165,34 @@ def list_policies() -> list[PolicySummaryItem]:
                 tables_count=len(doc.tables),
             )
         )
+
+    # Include available provider policies from manifest.json
+    settings = get_settings()
+    manifest_file = settings.raw_policies_dir / "manifest.json"
+    if manifest_file.exists():
+        try:
+            import json
+
+            entries = json.loads(manifest_file.read_text(encoding="utf-8"))
+            for entry in entries:
+                doc_id = entry.get("doc_id", "")
+                if doc_id and doc_id not in seen_ids:
+                    seen_ids.add(doc_id)
+                    items.append(
+                        PolicySummaryItem(
+                            doc_id=doc_id,
+                            policy_name=entry.get("policy_name", doc_id),
+                            insurer_name=entry.get("insurer_name", "Unknown Insurer"),
+                            uin=entry.get("uin", "UNKNOWN_UIN"),
+                            page_count=int(entry.get("pages", 1)),
+                            parents_count=0,
+                            children_count=0,
+                            tables_count=0,
+                        )
+                    )
+        except Exception as exc:
+            logger.debug("Failed reading manifest for policy list: %s", exc)
+
     return items
 
 
@@ -202,6 +235,24 @@ async def ingest_policy(
 @app.post("/api/v1/query", response_model=GroundedQueryResponse)
 def query_policy(req: QueryRequest) -> GroundedQueryResponse:
     pipe = get_pipeline()
+    if req.doc_id and req.doc_id not in pipe.get_indexed_documents():
+        settings = get_settings()
+        manifest_file = settings.raw_policies_dir / "manifest.json"
+        if manifest_file.exists():
+            try:
+                import json
+
+                entries = json.loads(manifest_file.read_text(encoding="utf-8"))
+                for entry in entries:
+                    if entry.get("doc_id") == req.doc_id:
+                        file_path = Path(entry.get("file_path", ""))
+                        if not file_path.is_absolute():
+                            file_path = Path.cwd() / file_path
+                        if file_path.exists():
+                            pipe.ingest_pdf(file_path, doc_id=req.doc_id)
+                        break
+            except Exception as exc:
+                logger.debug("Failed on-demand ingestion for %s: %s", req.doc_id, exc)
     return pipe.query(user_query=req.query, doc_id=req.doc_id, top_k=req.top_k)
 
 

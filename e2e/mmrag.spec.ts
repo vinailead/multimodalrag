@@ -11,11 +11,13 @@ test.describe("Indian Insurance Multimodal RAG — Material Design 3 E2E Tests",
     const brand = page.locator(".m3-app-title");
     await expect(brand).toHaveText("Indian Insurance Multimodal RAG");
 
-    // Verify Policy Select is populated
+    // Verify Policy Select is populated with available policies
     const select = page.locator("#policy-select");
     await expect(select).toBeVisible();
     const options = select.locator("option");
-    await expect(options).toHaveCount(2);
+    await expect(options).not.toHaveCount(0);
+    const count = await options.count();
+    expect(count).toBeGreaterThanOrEqual(2);
 
     // Verify FinOps and Scorecard Cards
     await expect(page.locator("#finops-card")).toBeVisible();

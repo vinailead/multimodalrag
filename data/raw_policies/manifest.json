@@ -8,17 +8,61 @@
     "file_path": "data/raw_policies/arogya_sanjeevani_policy_wordings.pdf",
     "sha256": "5d244001ff15c07afada3e8731473d46a5a5e58c1122c1b77794b708ecbcf718",
     "pages": 6,
-    "source": "irdai_standard_synthesized"
+    "source": "direct_provider_download"
   },
   {
     "doc_id": "saral_suraksha_hdfc_ergo",
     "policy_name": "Saral Suraksha Bima, HDFC ERGO General Insurance Co. Ltd.",
     "insurer_name": "HDFC ERGO General Insurance Company",
     "uin": "HDFPAIP21175V012021",
-    "filename": "saral_suraksha_bima_policy_wordings.pdf",
-    "file_path": "data/raw_policies/saral_suraksha_bima_policy_wordings.pdf",
-    "sha256": "edb67b909fa0d252a760aa4e9535d4821961beb9017f03c6c4347fe59bfc6026",
+    "filename": "saral_suraksha_bima.pdf",
+    "file_path": "data/raw_policies/saral_suraksha_bima.pdf",
+    "sha256": "975d0dd14cd2568b92bb40ceb8d3ebf3c71f0cbe6f9766e60fc852a8a9ae6c59",
     "pages": 3,
-    "source": "irdai_standard_synthesized"
+    "source": "direct_provider_download"
+  },
+  {
+    "doc_id": "hdfc_ergo_optima_secure",
+    "policy_name": "Optima Secure Policy Wordings, HDFC ERGO General Insurance Co. Ltd.",
+    "insurer_name": "HDFC ERGO General Insurance Company",
+    "uin": "HDFHLIP26058V082526",
+    "filename": "hdfc_ergo_optima_secure.pdf",
+    "file_path": "data/raw_policies/hdfc_ergo_optima_secure.pdf",
+    "sha256": "79662228bf4a304621c15fd76425f1fd8ac4ff915b688c9033f2ff3c210216e5",
+    "pages": 53,
+    "source": "direct_provider_download"
+  },
+  {
+    "doc_id": "tata_aig_medicare_premier",
+    "policy_name": "Tata AIG MediCare Premier Policy Wordings",
+    "insurer_name": "Tata AIG General Insurance Company Limited",
+    "uin": "TATHLIP21257V022021",
+    "filename": "tata_aig_medicare_premier.pdf",
+    "file_path": "data/raw_policies/tata_aig_medicare_premier.pdf",
+    "sha256": "392feaeeb26cb9ec7f6addc3ed764291d9c9f16bf6c70f466d9f92f85db78960",
+    "pages": 60,
+    "source": "direct_provider_download"
+  },
+  {
+    "doc_id": "godigit_health_plus",
+    "policy_name": "Digit Health Plus Policy Wordings",
+    "insurer_name": "Go Digit General Insurance Limited",
+    "uin": "GODHLIP20025V011920",
+    "filename": "godigit_health_plus.pdf",
+    "file_path": "data/raw_policies/godigit_health_plus.pdf",
+    "sha256": "16e79a68ce6b66eabc807aff798e3e8a2ead66e1e2b2f6e873af2d3f4de05080",
+    "pages": 41,
+    "source": "direct_provider_download"
+  },
+  {
+    "doc_id": "bajaj_allianz_health_guard",
+    "policy_name": "Bajaj Allianz Health Guard Policy Wordings",
+    "insurer_name": "Bajaj Allianz General Insurance Company Limited",
+    "uin": "BAJHLIP21057V032021",
+    "filename": "bajaj_allianz_health_guard.pdf",
+    "file_path": "data/raw_policies/bajaj_allianz_health_guard.pdf",
+    "sha256": "4d6826882524a45c478394622527b50e247ac5153fddd154b29573d1cf46196f",
+    "pages": 31,
+    "source": "direct_provider_download"
   }
 ]

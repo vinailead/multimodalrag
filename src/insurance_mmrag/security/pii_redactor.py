@@ -19,7 +19,7 @@ _PATTERNS: tuple[tuple[str, re.Pattern[str]], ...] = (
             re.IGNORECASE,
         ),
     ),
-    ("AADHAAR", re.compile(r"(?<![\d+])\d{4}[\s-]?\d{4}[\s-]?\d{4}(?!\d)")),
+    ("AADHAAR", re.compile(r"(?<![a-zA-Z\d\\+])\d{4}[\s-]?\d{4}[\s-]?\d{4}(?!\d)")),
     ("PAN", re.compile(r"\b[A-Z]{5}[0-9]{4}[A-Z]\b")),
     ("PHONE", re.compile(r"(?:\+91[\s-]?|\b0)?(?<!\d)[6-9]\d{9}\b")),
 )

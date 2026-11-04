@@ -25,19 +25,36 @@ st.set_page_config(
 
 @st.cache_resource
 def get_cached_pipeline() -> InsuranceMMRAGPipeline:
+    import json
+
     settings = get_settings()
     pipe = create_default_pipeline(settings=settings, use_stub=True)
 
-    # Seed sample policies
-    p1 = settings.raw_policies_dir / "arogya_sanjeevani_policy_wordings.pdf"
-    if not p1.exists():
-        create_arogya_sanjeevani_pdf(p1)
-    pipe.ingest_pdf(p1, doc_id="arogya_sanjeevani_national")
+    # Ingest all available provider policies from manifest.json
+    manifest_file = settings.raw_policies_dir / "manifest.json"
+    if manifest_file.exists():
+        try:
+            entries = json.loads(manifest_file.read_text(encoding="utf-8"))
+            for entry in entries:
+                file_path = Path(entry.get("file_path", ""))
+                if not file_path.is_absolute():
+                    file_path = Path.cwd() / file_path
+                if file_path.exists():
+                    pipe.ingest_pdf(file_path, doc_id=entry.get("doc_id"))
+        except Exception:
+            pass
 
-    p2 = settings.raw_policies_dir / "saral_suraksha_bima.pdf"
-    if not p2.exists():
-        create_saral_suraksha_bima_pdf(p2)
-    pipe.ingest_pdf(p2, doc_id="saral_suraksha_bima_hdfc")
+    # Ensure baseline policies exist if manifest was not loaded
+    if not pipe.get_indexed_documents():
+        p1 = settings.raw_policies_dir / "arogya_sanjeevani_policy_wordings.pdf"
+        if not p1.exists():
+            create_arogya_sanjeevani_pdf(p1)
+        pipe.ingest_pdf(p1, doc_id="arogya_sanjeevani_national")
+
+        p2 = settings.raw_policies_dir / "saral_suraksha_bima.pdf"
+        if not p2.exists():
+            create_saral_suraksha_bima_pdf(p2)
+        pipe.ingest_pdf(p2, doc_id="saral_suraksha_bima_hdfc")
 
     return pipe
 
