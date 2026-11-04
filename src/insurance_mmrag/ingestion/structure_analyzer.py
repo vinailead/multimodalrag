@@ -115,16 +115,21 @@ class StructureAnalyzer:
         if current_type is not None and current_blocks:
             boundaries.append((current_start_page, current_type, current_title, current_blocks, []))
 
-        # Assign table regions to sections
+        # Assign table regions to sections (each table assigned to at most one section)
         all_tables = [(p.page_number, t) for p in pages for t in p.tables]
+        assigned_tables: set[int] = set()
         sections: list[DetectedSection] = []
 
-        for idx, (start_p, s_type, title, blocks, _) in enumerate(boundaries):
-            end_p = pages[-1].page_number if idx == len(boundaries) - 1 else boundaries[idx + 1][0]
-            if end_p < start_p:
-                end_p = start_p
+        for idx, (_, s_type, title, blocks, _) in enumerate(boundaries):
+            section_start_page = min(b.page_number for b in blocks)
+            section_end_page = max(b.page_number for b in blocks)
 
-            section_tables = [t for p_num, t in all_tables if start_p <= p_num <= end_p]
+            section_tables: list[TableRegion] = []
+            for t_idx, (p_num, t) in enumerate(all_tables):
+                if t_idx not in assigned_tables and section_start_page <= p_num <= section_end_page:
+                    section_tables.append(t)
+                    assigned_tables.add(t_idx)
+
             section_text = "\n\n".join(b.text for b in blocks)
 
             sections.append(
@@ -132,8 +137,8 @@ class StructureAnalyzer:
                     section_id=f"sec_{idx + 1:02d}_{s_type.value.lower()}",
                     section_type=s_type,
                     title=title,
-                    start_page=start_p,
-                    end_page=end_p,
+                    start_page=section_start_page,
+                    end_page=section_end_page,
                     text=section_text,
                     tables=section_tables,
                 )

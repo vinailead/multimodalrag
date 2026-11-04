@@ -60,6 +60,7 @@ ignore = ["E501"]
 
 [tool.pyright]
 include = ["src", "tests", "scripts"]
+stubPath = "typings"
 pythonVersion = "3.12"
 typeCheckingMode = "strict"
 

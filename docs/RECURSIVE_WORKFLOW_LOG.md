@@ -26,11 +26,11 @@ This file implements the **Recursive Workflow Planning** memory loop. Every time
 
 ---
 
-## Log Entry #006 — Phase 3 Parent-Child Hierarchy, Cross-Reference Linking & Table Vision Extraction
-- **Timestamp**: `2026-11-04T09:07:00+05:30`
-- **Observation**: Tables embedded in PDF benefit schedules contain merged cells and footnote provisos that must be preserved for accurate vector matching. Converting tables into both full Markdown summaries and atomic synthetic Q&A child chunks allows dense embeddings to match user queries with high precision while retaining pointer references to the visual crop PNG.
+## Log Entry #007 — Phase 4 Hybrid RRF Search, Table Ownership & Pyright Typings
+- **Timestamp**: `2026-11-04T09:12:00+05:30`
+- **Observation**: When adjacent sections share a page boundary, table artifacts must be assigned to exactly one section to prevent duplicate table child chunks from overwriting vector store payloads. In addition, `qdrant-client`'s modern `query_points` API returns strictly typed `QueryResponse.points`, and a local type stub for `rank_bm25` under `typings/` satisfies strict Pyright without disabling any type rules.
 - **Recursive Action Taken**:
-  1. Implemented `TableVisionParser` with automatic 16pt margin visual cropping, Gemini Vision Markdown extraction, synthetic Q&A generation, and SHA-256 disk caching.
-  2. Implemented `CrossReferenceResolver` mapping `Excl01`–`Excl18` codes, section numbers, and defined terms to parent chunk IDs.
-  3. Built `PrecedenceCheck` enforcing the IRDAI Legal Precedence rule (`Policy Wordings > CIS Summary`) whenever customer summary chunks are cited.
-  4. Verified across 47 tests with 95.66% test coverage.
+  1. Updated `StructureAnalyzer` with `assigned_tables` deduplication so each benefit table belongs to exactly one section.
+  2. Implemented `HybridVectorStore` using `QdrantClient.query_points` and BM25Okapi with Reciprocal Rank Fusion (RRF), clause boosts (+0.05 for `Excl01`–`Excl18`), and table boosts (+0.02).
+  3. Added `typings/rank_bm25/__init__.pyi` with `stubPath = "typings"` in `pyproject.toml`.
+  4. Verified all 50 unit and integration tests at 97.18% coverage.

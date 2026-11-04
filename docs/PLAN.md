@@ -119,12 +119,12 @@ Implement **Module 4 (`MultimodalEmbedder` & `HybridVectorStore`)** and **Module
 - `tests/test_indexing_and_intent_router.py`
 
 ### Success Criteria (Self-Verifiable Checkboxes)
-- [ ] **Test**: `uv run pytest tests/test_indexing_and_intent_router.py -v` passes 100%, verifying:
+- [x] **Test**: `uv run pytest tests/test_indexing_and_intent_router.py -v` passes 100%, verifying:
   - Compound query decomposition into bounded `sub_queries` (`<= 3` sub-queries, `max_hops=2`).
   - Metadata filtering on `section_type` and `boost_tables=True`.
   - Exact `Excl01`–`Excl18` ranking #1 via BM25 + dense RRF.
-- [ ] **Quality Gate**: `uv run ruff check`, `uv run pyright`, `uv run bandit`, and `uv run pytest --cov=src/insurance_mmrag --cov-fail-under=80` all exit with code `0`.
-- [ ] **Recursive Update**: Log RRF weighting and CRAG sub-query recall findings in `docs/RECURSIVE_WORKFLOW_LOG.md` and update `docs/STATUS.md`.
+- [x] **Quality Gate**: `uv run ruff check`, `uv run pyright`, `uv run bandit`, and `uv run pytest --cov=src/insurance_mmrag --cov-fail-under=80` all exit with code `0`.
+- [x] **Recursive Update**: Log RRF weighting and CRAG sub-query recall findings in `docs/RECURSIVE_WORKFLOW_LOG.md` and update `docs/STATUS.md`.
 
 ---
 

@@ -13,7 +13,7 @@
 | **Phase 1** | Repo Scaffold, Pre-Commit Hook, Stub Model, Security & FinOps Core | **COMPLETED** | 100% (ruff, pyright, bandit, pytest 95%) |
 | **Phase 2** | Real IRDAI Policy Fetcher & Pre-Chunking Structure Analyzer (Module 1) | **COMPLETED** | 100% (ruff, pyright, bandit, pytest 95%) |
 | **Phase 3** | Parent-Child Chunker, Cross-Ref Graph & Vision Table Extractor (Modules 2 & 3) | **COMPLETED** | 100% (ruff, pyright, bandit, pytest 96%) |
-| **Phase 4** | Multimodal Indexing (Qdrant + BM25 RRF) & Intent Router (Modules 4 & 5) | **PENDING** | Pending |
+| **Phase 4** | Multimodal Indexing (Qdrant + BM25 RRF) & Intent Router (Modules 4 & 5) | **COMPLETED** | 100% (ruff, pyright, bandit, pytest 97%) |
 | **Phase 5** | Context Assembly, Grounded Generator, FastAPI Backend & CLI (Module 6) | **PENDING** | Pending |
 | **Phase 6** | Google Material 3 TypeScript Web UI, Streamlit App, Notebook & Playwright E2E | **PENDING** | Pending |
 

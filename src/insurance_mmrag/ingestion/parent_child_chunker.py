@@ -43,6 +43,7 @@ class ParentChildChunker:
         all_parents: list[ParentChunk] = []
         all_children: list[ChildChunk] = []
         all_tables: list[ExtractedTableArtifact] = []
+        section_tables_map: dict[str, list[ExtractedTableArtifact]] = {}
 
         # First pass: parse tables and create ParentChunks
         for sec in structure.sections:
@@ -60,6 +61,8 @@ class ParentChildChunker:
                     )
                     sec_tables.append(art)
                     all_tables.append(art)
+
+            section_tables_map[sec.section_id] = sec_tables
 
             md_tables = [t.markdown_table for t in sec_tables]
             crops = [t.image_crop_path for t in sec_tables]
@@ -124,7 +127,7 @@ class ParentChildChunker:
                 )
 
             # Add table child chunks
-            sec_table_artifacts = [t for t in all_tables if t.section_type == sec.section_type]
+            sec_table_artifacts = section_tables_map.get(sec.section_id, [])
             for art in sec_table_artifacts:
                 table_children = self.table_parser.create_table_child_chunks(
                     artifact=art,
