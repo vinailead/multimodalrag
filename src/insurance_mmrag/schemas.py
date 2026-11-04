@@ -149,6 +149,22 @@ class IngestedDocument(BaseModel):
     children: list[ChildChunk]
     tables: list[ExtractedTableArtifact]
 
+    @property
+    def doc_id(self) -> str:
+        return self.structure.doc_id
+
+    @property
+    def policy_name(self) -> str:
+        return self.structure.policy_name
+
+    @property
+    def insurer_name(self) -> str:
+        return self.structure.insurer_name
+
+    @property
+    def uin(self) -> str:
+        return self.structure.uin
+
 
 # --------------------------------------------------------------------------- LLM drafts
 class SectionClassificationDraft(BaseModel):
