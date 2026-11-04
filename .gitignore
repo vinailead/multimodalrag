@@ -21,6 +21,8 @@ test-results/
 
 # Environment & Runtime Logs
 .env
+.agents/
+.claude/
 logs/*.jsonl
 data/qdrant_storage/
 data/cache/

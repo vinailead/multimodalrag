@@ -5,7 +5,7 @@ from __future__ import annotations
 from enum import StrEnum
 from typing import Literal
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, computed_field
 
 
 class SectionType(StrEnum):
@@ -235,6 +235,29 @@ class FinOpsSummary(BaseModel):
     total_prompt_tokens: int
     total_completion_tokens: int
     total_embedding_tokens: int
+
+    @computed_field
+    @property
+    def cache_hit_rate_pct(self) -> float:
+        return round(self.cache_hit_ratio * 100, 2)
+
+    @computed_field
+    @property
+    def budget_utilized_pct(self) -> float:
+        if self.budget_usd <= 0:
+            return 0.0
+        used = self.budget_usd - self.budget_remaining_usd
+        return round((used / self.budget_usd) * 100, 2)
+
+    @computed_field
+    @property
+    def cache_misses(self) -> int:
+        return max(0, self.total_calls - self.cache_hits)
+
+    @computed_field
+    @property
+    def circuit_broken(self) -> bool:
+        return self.budget_remaining_usd <= 0.0
 
 
 class AuditLogEntry(BaseModel):
