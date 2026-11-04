@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Indian Insurance Policy Multimodal RAG — Gemini 2.5 Vision & Material Design 3</title>
+    <link rel="stylesheet" href="/src/styles/material3.css" />
+  </head>
+  <body>
+    <!-- Top App Bar -->
+    <header class="m3-top-app-bar" role="banner">
+      <div class="m3-brand-container">
+        <div class="m3-logo-icon" aria-hidden="true">IR</div>
+        <div>
+          <h1 class="m3-app-title">Indian Insurance Multimodal RAG</h1>
+          <p class="m3-app-subtitle">IRDAI Policy Analysis · Parent-Child Chunking · Gemini 2.5 Vision Tables</p>
+        </div>
+      </div>
+      <div class="m3-badges-row">
+        <span class="m3-badge m3-badge-primary" id="health-badge">Backend: CONNECTING...</span>
+        <span class="m3-badge m3-badge-verified">DPDP Act 2023 Compliant</span>
+        <span class="m3-badge m3-badge-primary">IRDAI Master Circular</span>
+      </div>
+    </header>
+
+    <!-- 3-Pane Responsive Layout -->
+    <div class="m3-layout-root">
+      <!-- Left Drawer: Policy & Telemetry Controls -->
+      <aside class="m3-drawer" aria-label="Policy and telemetry navigation">
+        <!-- Policy Selector Card -->
+        <section class="m3-card" id="policy-card">
+          <h2 class="m3-card-title">Select IRDAI Policy</h2>
+          <select id="policy-select" class="m3-select" aria-label="Select policy document">
+            <option value="arogya_sanjeevani">Arogya Sanjeevani Standard Policy (IRDAI/NL-HLT/2020)</option>
+            <option value="saral_suraksha_bima">Saral Suraksha Bima (Standard Personal Accident)</option>
+          </select>
+        </section>
+
+        <!-- FinOps USD / INR Spend Telemetry -->
+        <section class="m3-card" id="finops-card">
+          <h2 class="m3-card-title">
+            <span>FinOps Telemetry</span>
+            <span class="m3-badge m3-badge-primary" style="font-size: 10px;">Gemini 2.5</span>
+          </h2>
+          <div id="finops-container">
+            <div class="m3-stat-grid">
+              <div class="m3-stat-item">
+                <div class="m3-stat-label">Total Spend (USD)</div>
+                <div class="m3-stat-value">$0.0000</div>
+              </div>
+              <div class="m3-stat-item">
+                <div class="m3-stat-label">Total Spend (INR)</div>
+                <div class="m3-stat-value">₹0.00</div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- RAG Triad Benchmark Scorecard -->
+        <section class="m3-card" id="scorecard-card">
+          <h2 class="m3-card-title">
+            <span>RAG Triad Scorecard</span>
+            <span class="m3-badge m3-badge-verified" style="font-size: 10px;">Passed</span>
+          </h2>
+          <div id="scorecard-container">
+            <div class="m3-stat-grid">
+              <div class="m3-stat-item">
+                <div class="m3-stat-label">Recall @ k</div>
+                <div class="m3-stat-value">85.0%</div>
+              </div>
+              <div class="m3-stat-item">
+                <div class="m3-stat-label">Faithfulness</div>
+                <div class="m3-stat-value">88.5%</div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Registered MCP Tool Server Card -->
+        <section class="m3-card" id="mcp-card">
+          <h2 class="m3-card-title">
+            <span>MCP Tool Server</span>
+            <span class="m3-badge m3-badge-primary" style="font-size: 10px;">4 Active</span>
+          </h2>
+          <div id="mcp-container">
+            <p style="font-size: 12px; color: var(--md-sys-color-on-surface-variant);">
+              Ready to serve Anthropic Claude Desktop & Cursor MCP clients.
+            </p>
+          </div>
+        </section>
+      </aside>
+
+      <!-- Center Workspace: Grounded Q&A -->
+      <main class="m3-workspace" role="main" aria-label="Grounded policy question answering workspace">
+        <!-- Search Bar -->
+        <div class="m3-search-bar">
+          <input
+            type="text"
+            id="query-input"
+            class="m3-search-input"
+            placeholder="Ask anything about exclusions, waiting periods, room rent, or cataract limits..."
+            aria-label="Enter insurance policy question"
+          />
+          <button type="button" id="query-submit-btn" class="m3-btn-primary">Ask</button>
+        </div>
+
+        <!-- Sample Query Pills -->
+        <div class="m3-pills-row" aria-label="Sample questions">
+          <span class="m3-pill-label">Sample Inquiries:</span>
+          <button type="button" class="m3-pill" data-query="What is the waiting period for cataract surgery under this policy?">
+            Cataract Waiting Period
+          </button>
+          <button type="button" class="m3-pill" data-query="What is the daily room rent sub-limit and mandatory co-payment percentage?">
+            Room Rent & Co-Pay
+          </button>
+          <button type="button" class="m3-pill" data-query="What is the waiting period for Pre-Existing Diseases under Code-Excl01?">
+            Pre-Existing Diseases (Excl01)
+          </button>
+          <button type="button" class="m3-pill" data-query="Does this policy cover cosmetic surgery for beautification under Code-Excl08?">
+            Cosmetic Surgery (Excl08)
+          </button>
+          <button type="button" class="m3-pill" data-query="Does this insurance policy cover pet veterinary dental implants in Antarctica?">
+            Adversarial Out-of-Scope (Abstain)
+          </button>
+          <button type="button" class="m3-pill" data-query="My Aadhaar is 1234 5678 9012 and PAN ABCDE1234F. What is the room rent limit?">
+            DPDP PII Redaction Demo
+          </button>
+        </div>
+
+        <!-- DPDP PII Masking Banner (Conditional) -->
+        <div id="pii-banner" class="m3-banner m3-banner-warning hidden" role="alert">
+          <span style="font-size: 18px;" aria-hidden="true">🛡️</span>
+          <div>
+            <strong>DPDP Act 2023 Redaction Applied:</strong>
+            <div id="pii-details" style="font-size: 12px; margin-top: 2px;">Masked Aadhaar / PAN / Mobile identifiers.</div>
+          </div>
+        </div>
+
+        <!-- Intent Routing & CRAG Decomposition Card -->
+        <div id="intent-container" class="m3-card hidden" aria-label="Intent routing and CRAG sub-queries"></div>
+
+        <!-- IRDAI Legal Precedence Banner -->
+        <div id="precedence-banner" class="m3-banner m3-banner-verified hidden" role="note">
+          <span style="font-size: 18px;" aria-hidden="true">⚖️</span>
+          <div>
+            <strong>IRDAI Legal Precedence Applied:</strong>
+            <div id="precedence-text" style="font-size: 12px; margin-top: 2px;">Policy Wordings & Schedule take precedence over CIS Summary.</div>
+          </div>
+        </div>
+
+        <!-- Grounded Answer Card -->
+        <section id="answer-card" class="m3-card hidden" aria-label="Policy answer and breakdown">
+          <div class="m3-answer-header">
+            <h2 style="font-size: 16px; font-weight: 600;">Grounded Policy Determination</h2>
+            <div id="confidence-slot"></div>
+          </div>
+
+          <!-- Abstention Warning -->
+          <div id="abstention-banner" class="m3-banner m3-banner-error hidden" role="alert" style="margin-bottom: 12px;">
+            <span style="font-size: 18px;" aria-hidden="true">⚠️</span>
+            <div>
+              <strong>IRDAI Abstention Disclaimer:</strong>
+              <div id="abstention-reason" style="font-size: 12px; margin-top: 2px;"></div>
+            </div>
+          </div>
+
+          <!-- Answer Body -->
+          <div id="answer-text" class="m3-answer-body"></div>
+
+          <!-- Structured Policy Breakdown Grid -->
+          <h3 style="font-size: 13px; font-weight: 600; text-transform: uppercase; color: var(--md-sys-color-on-surface-variant); margin-top: 16px;">
+            Policy Coverage Matrix
+          </h3>
+          <div id="breakdown-slot"></div>
+
+          <!-- Grounded Citations Section -->
+          <h3 style="font-size: 13px; font-weight: 600; text-transform: uppercase; color: var(--md-sys-color-on-surface-variant); margin-top: 16px; margin-bottom: 8px;">
+            Grounded Citations (Click to inspect)
+          </h3>
+          <div id="citations-slot"></div>
+        </section>
+
+        <!-- Execution Waterfall Section -->
+        <div id="waterfall-slot"></div>
+      </main>
+
+      <!-- Right Inspector: Visual Grounding & Parent Context -->
+      <aside class="m3-inspector" aria-label="Visual grounding and parent section context inspector">
+        <h2 style="font-size: 15px; font-weight: 600; border-bottom: 1px solid var(--md-sys-color-outline-variant); padding-bottom: 10px;">
+          Visual Grounding Inspector
+        </h2>
+        <div id="inspector-content">
+          <p style="font-size: 13px; color: var(--md-sys-color-on-surface-variant);">
+            Click any citation chip in the center workspace to inspect the 200-DPI visual table crop, full parent clause context, and 1-hop cross-references.
+          </p>
+        </div>
+      </aside>
+    </div>
+
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>

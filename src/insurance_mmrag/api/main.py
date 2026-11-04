@@ -14,7 +14,10 @@ from pydantic import BaseModel, Field
 
 from insurance_mmrag.config import get_settings
 from insurance_mmrag.evals.benchmark_runner import BenchmarkRunner
-from insurance_mmrag.ingestion.sample_policy_factory import create_arogya_sanjeevani_pdf
+from insurance_mmrag.ingestion.sample_policy_factory import (
+    create_arogya_sanjeevani_pdf,
+    create_saral_suraksha_bima_pdf,
+)
 from insurance_mmrag.mcp_tools import MCPToolServer
 from insurance_mmrag.pipeline import InsuranceMMRAGPipeline, create_default_pipeline
 from insurance_mmrag.schemas import (
@@ -39,6 +42,12 @@ def get_pipeline() -> InsuranceMMRAGPipeline:
         if not sample_path.exists():
             create_arogya_sanjeevani_pdf(sample_path)
         _pipeline.ingest_pdf(sample_path, doc_id="arogya_sanjeevani_national")
+
+        sample_path_saral = settings.raw_policies_dir / "saral_suraksha_bima.pdf"
+        if not sample_path_saral.exists():
+            create_saral_suraksha_bima_pdf(sample_path_saral)
+        _pipeline.ingest_pdf(sample_path_saral, doc_id="saral_suraksha_bima_hdfc")
+
         _mcp_server = MCPToolServer(_pipeline)
     return _pipeline
 

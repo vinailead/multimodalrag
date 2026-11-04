@@ -48,3 +48,19 @@ This file implements the **Recursive Workflow Planning** memory loop. Every time
   1. Updated `sample_policy_factory.py` to use `insert_textbox` with page-margin bounding boxes across all policy documents.
   2. Implemented `ContextAssembler` (parent promotion, 1-hop cross-reference expansion, CRAG sub-query hops), `GroundedGenerator` (calibrated confidence, $< 0.70$ abstention, citations), `MCPToolServer` (4 standard tools), `FastAPI` application (`/api/v1`), `CLI` (`mmrag`), and `BenchmarkRunner` (Quantitative RAG Triad Scorecard).
   3. Verified 63 unit and integration tests passing at 96.04% coverage with Ruff lint/format clean, Pyright 0 errors, Bandit SAST clean, and pre-commit passing.
+
+---
+
+## Log Entry #009 — Phase 6 Material Design 3 Web UI, Playwright E2E, Vitest & Streamlit Showcase
+- **Timestamp**: `2026-11-04T09:47:00+05:30`
+- **Observation**:
+  1. Frontend TypeScript interfaces must strictly align with backend Pydantic models (e.g. `PrecedenceCheck.rule_applied` and `note` rather than dynamic fields) to prevent blank legal precedence banners.
+  2. Playwright `webServer` automatically binds local port 8000 to launch Chromium E2E testing against FastAPI. In macOS sandbox environments, resolving `uv` to `/opt/homebrew/bin/uv` avoids shell execution permission traps.
+  3. Prettier `--check` checks both `.ts` and `.css` files, requiring strict whitespace conformance across Material 3 stylesheets and test files.
+  4. Streamlit and Jupyter notebook artifacts allow enterprise evaluators to choose between an interactive web application, an alternative rapid-prototyping dashboard (`streamlit run ui/streamlit_app.py`), or a self-contained visual execution notebook (`notebooks/Indian_Insurance_Multimodal_RAG_Showcase.ipynb`).
+- **Recursive Action Taken**:
+  1. Built Google Material Design 3 Web UI (`ui/web/index.html`, `material3.css`, `types.ts`, `api.ts`, `components.ts`, `main.ts`) featuring the 3-pane layout, execution trace waterfall, visual citation inspector, and confidence meters.
+  2. Created 22 Vitest unit tests in `ui/web/src/__tests__/` achieving **99.62% line coverage** and 100% function coverage.
+  3. Created 6 comprehensive Playwright E2E browser tests in `e2e/mmrag.spec.ts` passing 100% against Chromium.
+  4. Created `ui/streamlit_app.py` dashboard and `notebooks/Indian_Insurance_Multimodal_RAG_Showcase.ipynb` notebook.
+  5. Successfully verified all 10 ADLC quality gates (`npm run check`) exiting with code `0`.

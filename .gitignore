@@ -24,5 +24,6 @@ test-results/
 logs/*.jsonl
 data/qdrant_storage/
 data/cache/
-data/*.pdf
+data/**/*.pdf
+data/sample_policies/
 logs/
