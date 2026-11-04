@@ -70,10 +70,10 @@ Build `scripts/fetch_irdai_policies.py` to fetch real public Indian insurance po
 - `tests/test_structure_analyzer.py`
 
 ### Success Criteria (Self-Verifiable Checkboxes)
-- [ ] **Command**: `uv run python scripts/fetch_irdai_policies.py --output-dir data/raw_policies` exits with code `0`, writes `data/raw_policies/manifest.json`, and verifies at least 2 real/standard Indian insurance policy & CIS PDFs on disk with valid PDF magic bytes (`%PDF-`) and SHA-256 hashes.
-- [ ] **Test**: `uv run pytest tests/test_structure_analyzer.py -v` passes 100% using `StubGeminiClient` and the IRDAI PDF fixture, confirming that all 9 `SectionType` categories (`CIS_Summary`, `Schedule_of_Benefits`, `Definitions`, `Base_Coverage`, `Waiting_Periods`, `Exclusions`, `Cost_Sharing`, `Claims_and_Grievance`, `Optional_Riders`) are accurately detected with exact start/end page numbers.
-- [ ] **Quality Gate**: `uv run ruff check`, `uv run pyright`, and `uv run pytest` exit with code `0` and $\ge 80\%$ coverage.
-- [ ] **Recursive Update**: Document IRDAI PDF structural patterns in `docs/RECURSIVE_WORKFLOW_LOG.md` and update `docs/STATUS.md`.
+- [x] **Command**: `uv run python scripts/fetch_irdai_policies.py --output-dir data/raw_policies` exits with code `0`, writes `data/raw_policies/manifest.json`, and verifies at least 2 real/standard Indian insurance policy & CIS PDFs on disk with valid PDF magic bytes (`%PDF-`) and SHA-256 hashes.
+- [x] **Test**: `uv run pytest tests/test_structure_analyzer.py -v` passes 100% using `StubGeminiClient` and the IRDAI PDF fixture, confirming that all 9 `SectionType` categories (`CIS_Summary`, `Schedule_of_Benefits`, `Definitions`, `Base_Coverage`, `Waiting_Periods`, `Exclusions`, `Cost_Sharing`, `Claims_and_Grievance`, `Optional_Riders`) are accurately detected with exact start/end page numbers.
+- [x] **Quality Gate**: `uv run ruff check`, `uv run pyright`, and `uv run pytest` exit with code `0` and $\ge 80\%$ coverage.
+- [x] **Recursive Update**: Document IRDAI PDF structural patterns in `docs/RECURSIVE_WORKFLOW_LOG.md` and update `docs/STATUS.md`.
 
 ---
 

@@ -1,0 +1,24 @@
+[
+  {
+    "doc_id": "arogya_sanjeevani_national",
+    "policy_name": "Arogya Sanjeevani Policy, National Insurance Co. Ltd.",
+    "insurer_name": "National Insurance Company Limited",
+    "uin": "NICHLIP20177V011920",
+    "filename": "arogya_sanjeevani_policy_wordings.pdf",
+    "file_path": "data/raw_policies/arogya_sanjeevani_policy_wordings.pdf",
+    "sha256": "5d244001ff15c07afada3e8731473d46a5a5e58c1122c1b77794b708ecbcf718",
+    "pages": 6,
+    "source": "irdai_standard_synthesized"
+  },
+  {
+    "doc_id": "saral_suraksha_hdfc_ergo",
+    "policy_name": "Saral Suraksha Bima, HDFC ERGO General Insurance Co. Ltd.",
+    "insurer_name": "HDFC ERGO General Insurance Company",
+    "uin": "HDFPAIP21175V012021",
+    "filename": "saral_suraksha_bima_policy_wordings.pdf",
+    "file_path": "data/raw_policies/saral_suraksha_bima_policy_wordings.pdf",
+    "sha256": "edb67b909fa0d252a760aa4e9535d4821961beb9017f03c6c4347fe59bfc6026",
+    "pages": 3,
+    "source": "irdai_standard_synthesized"
+  }
+]
