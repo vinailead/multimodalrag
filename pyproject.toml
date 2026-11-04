@@ -1,0 +1,82 @@
+[project]
+name = "insurance-mmrag"
+version = "1.0.0"
+description = "Enterprise Multimodal RAG System for Indian Insurance Policies (IRDAI)"
+readme = "IMPLEMENTATION_PLAN.md"
+requires-python = ">=3.12"
+dependencies = [
+    "fastapi>=0.115.0",
+    "google-genai>=1.0.0",
+    "httpx>=0.27.0",
+    "numpy>=2.0.0",
+    "pydantic>=2.9.0",
+    "pydantic-settings>=2.6.0",
+    "pymupdf>=1.24.10",
+    "python-multipart>=0.0.12",
+    "qdrant-client>=1.12.0",
+    "rank-bm25>=0.2.2",
+    "rich>=13.9.0",
+    "uvicorn>=0.32.0",
+]
+
+[project.scripts]
+mmrag = "insurance_mmrag.cli:main"
+
+[dependency-groups]
+dev = [
+    "bandit[toml]>=1.7.10",
+    "editables>=0.5",
+    "hatchling>=1.25.0",
+    "pyright>=1.1.389",
+    "pytest>=8.3.0",
+    "pytest-asyncio>=0.24.0",
+    "pytest-cov>=6.0.0",
+    "ruff>=0.8.0",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/insurance_mmrag"]
+
+[tool.uv]
+python-preference = "only-system"
+# Build the local package with the locked dev hatchling so offline commits/pre-commit work.
+no-build-isolation-package = ["insurance-mmrag"]
+
+[tool.ruff]
+target-version = "py312"
+line-length = 100
+src = ["src", "tests", "scripts"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP", "SIM", "RUF", "S"]
+ignore = ["E501"]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**/*.py" = ["S101", "S105", "S106"]
+
+[tool.pyright]
+include = ["src", "tests", "scripts"]
+pythonVersion = "3.12"
+typeCheckingMode = "strict"
+
+[tool.bandit]
+exclude_dirs = ["tests", ".venv", "node_modules"]
+skips = ["B101"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
+addopts = "-ra -q"
+
+[tool.coverage.run]
+source = ["src/insurance_mmrag"]
+omit = ["src/insurance_mmrag/__main__.py"]
+
+[tool.coverage.report]
+fail_under = 80
+show_missing = true

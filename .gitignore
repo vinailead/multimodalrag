@@ -1,0 +1,28 @@
+# Python & uv
+.venv/
+.uv-cache/
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.coverage
+coverage.xml
+htmlcov/
+
+# Node & Frontend
+node_modules/
+dist/
+coverage/
+playwright-report/
+test-results/
+
+# Environment & Runtime Logs
+.env
+logs/*.jsonl
+data/qdrant_storage/
+data/cache/crops/*.png
+data/cache/tables/*.json
+data/cache/embeddings/*.json

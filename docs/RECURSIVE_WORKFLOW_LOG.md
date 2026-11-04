@@ -23,3 +23,14 @@ This file implements the **Recursive Workflow Planning** memory loop. Every time
      - **End-to-End**: `Playwright` browser tests verifying the Google Material Design 3 UI.
   2. Enforced the **Stub Model Rule**: All automated tests use `StubGeminiClient` and never call a live external model.
   3. Enforced the **Cross-Platform Rule**: All `package.json` scripts use `uv run` or Node `.mjs` scripts so everything runs identically on Windows, macOS, and Linux.
+
+---
+
+## Log Entry #004 — Phase 1 Quality Gate Completion & Strict Typing Heuristics
+- **Timestamp**: `2026-11-04T08:58:00+05:30`
+- **Observation**: Under Pyright strict mode, dataclass/Pydantic `default_factory=list` infers `list[Unknown]`, and `@contextmanager` returning `Iterator` triggers Python 3.12+ deprecation warnings favoring `Generator`. Furthermore, `uv` in sandboxed environments needs `no-build-isolation-package = ["insurance-mmrag"]` with dev dependencies `hatchling` and `editables` so local package rebuilds succeed without network access.
+- **Recursive Action Taken**:
+  1. Standardized typed factory functions (e.g. `_empty_str_list`, `_empty_table_regions`, `_empty_section_types`) across all Pydantic schemas and dataclasses to guarantee 100% known types under strict Pyright without any `# type: ignore`.
+  2. Annotated generator contexts with `collections.abc.Generator[SpanHandle, None, None]`.
+  3. Configured `no-build-isolation-package = ["insurance-mmrag"]` in `pyproject.toml` so local git pre-commit checks and tests run entirely offline.
+  4. Verified all 39 Phase 1 unit tests with 95% test coverage.
