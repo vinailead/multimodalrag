@@ -106,6 +106,18 @@ This file implements the **Recursive Workflow Planning** memory loop. Every time
   1. Built `src/insurance_mmrag/domain/policy_catalog.py` normalizing all 6 policies in `manifest.json` into clause-cited `PolicyFeatureCard` objects.
   2. Built `src/insurance_mmrag/domain/premium_calculator.py` with age-band base rates, Sum Insured scaling, non-smoker/non-drinker healthy-lifestyle discounts (5%–7.5%), 18% GST, and `evaluate_portfolio_split()` comparing Single Floater vs. Split Portfolio (Young Nuclear Floater + Parent Floater).
 
+---
+
+## Log Entry #013 — V2 Phases 2 & 3: Probing Underwriter, Clause-Grounded Comparator & Claim Bill Simulator
+- **Timestamp**: `2026-11-11T18:57:00+05:30`
+- **Observation**:
+  1. When a user asks *"I am individual with age 26, non smoker and non drinker with family of 5 what is the best policy for me"*, four underwriting slots determine whether a policy will succeed or fail at claim time: (a) whether the 5 members include senior parents vs. spouse/kids, (b) whether any member has a Pre-Existing Disease (`Excl01`), (c) the City Tier (which dictates hospital room rent per day), and (d) the priority between zero out-of-pocket deductions vs. lowest annual premium.
+  2. Rather than blocking the user with an empty form, the optimal product pattern is **Immediate Value + Progressive Slot Probing**: provide an immediate ranked recommendation and family-split cost breakdown on Turn 1 alongside 4 interactive probing questions that dynamically re-rank the portfolio as the user answers them.
+- **Recursive Action Taken**:
+  1. Built `RecommendationEngine` (`src/insurance_mmrag/advisor/recommendation_engine.py`), `PolicyComparator` (`src/insurance_mmrag/advisor/policy_comparator.py`), and `ClaimSimulator` (`src/insurance_mmrag/advisor/claim_simulator.py`).
+  2. Integrated advisory auto-detection into `InsuranceMMRAGPipeline.query()` so general queries asking for the best policy automatically return structured `advisor_recommendation` payloads.
+
+
 
   2. Tightened `PiiRedactor` Aadhaar regex lookbehind to `(?<![a-zA-Z\d\\+])`, ensuring escapes and variable identifiers are never falsely matched as Aadhaar numbers.
   3. Configured `table_vision_parser.py` to use `ensure_ascii=False` and added resilient escape-sequence recovery in `stub_gemini.py` `_parse_rows`.

@@ -18,6 +18,8 @@
 | **Phase 6** | Google Material 3 TypeScript Web UI, Streamlit App, Notebook & Playwright E2E | **COMPLETED** | 100% (eslint, prettier, tsc, vitest 99.62%, playwright 100%) |
 | **Enhancement** | Live Health Insurance Provider Ingestion (HDFC ERGO, Tata AIG, Digit, Bajaj) | **COMPLETED** | 6 policies, 194 pages, 87 tables ingested & verified in M3 + Streamlit |
 | **V2 Phase 1** | Provider Benefit Catalog Normalization & Indicative Actuarial Premium Engine | **COMPLETED** | 100% (`test_premium_and_catalog.py`, ruff, pyright, bandit) |
+| **V2 Phase 2** | Conversational Needs-Discovery & Probing Recommendation Engine | **COMPLETED** | 100% (`test_recommendation_advisor.py`, ruff, pyright, bandit) |
+| **V2 Phase 3** | Multi-Policy Side-by-Side Comparison Matrix & Out-of-Pocket Claim Bill Simulator | **COMPLETED** | 100% (`test_policy_comparator_and_simulator.py`, ruff, pyright, bandit) |
 
 ---
 

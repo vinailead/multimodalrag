@@ -4,6 +4,12 @@ from __future__ import annotations
 
 from pathlib import Path
 
+from insurance_mmrag.advisor.claim_simulator import ClaimSimulator
+from insurance_mmrag.advisor.policy_comparator import PolicyComparator
+from insurance_mmrag.advisor.recommendation_engine import (
+    RecommendationEngine,
+    is_advisory_or_comparison_query,
+)
 from insurance_mmrag.config import Settings, get_settings
 from insurance_mmrag.generation.grounded_generator import GroundedGenerator
 from insurance_mmrag.indexing.multimodal_embedder import MultimodalEmbedder
@@ -17,10 +23,15 @@ from insurance_mmrag.llm.gemini_client import GeminiClient
 from insurance_mmrag.retrieval.context_assembler import ContextAssembler
 from insurance_mmrag.retrieval.intent_router import IntentRouter
 from insurance_mmrag.schemas import (
+    AdvisorRecommendationResponse,
+    ApplicantProfile,
+    ClaimSimulationResponse,
     FinOpsSummary,
     GroundedQueryResponse,
     IngestedDocument,
     ParentChunk,
+    PolicyComparisonResponse,
+    PolicyCoverageSummary,
 )
 from insurance_mmrag.security.pii_redactor import PiiRedactor
 from insurance_mmrag.security.sanitizer import PdfSanitizer
@@ -69,6 +80,9 @@ class InsuranceMMRAGPipeline:
             pro_model=settings.pro_model,
             min_confidence_threshold=settings.min_confidence_threshold,
         )
+        self.recommendation_engine = RecommendationEngine()
+        self.policy_comparator = PolicyComparator()
+        self.claim_simulator = ClaimSimulator()
 
         self._parent_index: dict[str, ParentChunk] = {}
         self._indexed_docs: dict[str, IngestedDocument] = {}
@@ -132,6 +146,29 @@ class InsuranceMMRAGPipeline:
                     trace=trace,
                 )
 
+            # Step 4: Advisory & Comparison Enrichment when user asks for best policy / comparison
+            if is_advisory_or_comparison_query(user_query):
+                with trace.span("advisor.recommendation_enrichment"):
+                    adv_rec = self.recommendation_engine.recommend(intent.redacted_query)
+                    top_card = adv_rec.ranked_policies[0].feature_card
+                    top_prem = adv_rec.ranked_policies[0].premium
+                    response = response.model_copy(
+                        update={
+                            "answer": adv_rec.executive_advisory_summary,
+                            "confidence_score": max(response.confidence_score, 0.92),
+                            "abstained": False,
+                            "abstention_reason": None,
+                            "coverage_summary": PolicyCoverageSummary(
+                                coverage_status="COVERED",
+                                waiting_period_details=f"{top_card.ped_waiting_months} months PED (Excl01); {top_card.specific_disease_waiting_months} months Specific (Excl02)",
+                                applicable_sub_limits=f"{top_card.room_rent_limit} | Annual Premium: ₹{top_prem.total_annual_premium_inr:,}/yr",
+                                cost_sharing_or_deductible=f"{top_card.mandatory_copay_pct:.0f}% Mandatory Co-Pay",
+                                applicable_exclusions=["Excl01", "Excl02"],
+                            ),
+                            "advisor_recommendation": adv_rec,
+                        }
+                    )
+
         response = response.model_copy(update={"trace_spans": trace.spans()})
 
         self.gateway.audit.log(
@@ -143,9 +180,67 @@ class InsuranceMMRAGPipeline:
                 "abstained": response.abstained,
                 "citations_count": len(response.citations),
                 "model_used": response.model_used,
+                "has_advisor_recommendation": response.advisor_recommendation is not None,
             },
         )
         return response
+
+    def recommend_policies(
+        self,
+        user_query: str,
+        profile: ApplicantProfile | None = None,
+    ) -> AdvisorRecommendationResponse:
+        clean_query, pii_cats, _ = self.gateway.guard_text(user_query)
+        result = self.recommendation_engine.recommend(clean_query, explicit_profile=profile)
+        self.gateway.audit.log(
+            "ADVISOR_RECOMMENDATION_COMPLETED",
+            {
+                "redacted_query": clean_query,
+                "pii_redacted": pii_cats,
+                "proposer_age": result.extracted_profile.proposer_age,
+                "family_size": result.extracted_profile.family_size,
+                "needs_probing": result.needs_probing,
+                "top_policy": result.ranked_policies[0].feature_card.doc_id,
+                "top_annual_premium_inr": result.ranked_policies[
+                    0
+                ].premium.total_annual_premium_inr,
+            },
+        )
+        return result
+
+    def compare_policies(
+        self,
+        doc_ids: list[str] | None = None,
+        profile: ApplicantProfile | None = None,
+    ) -> PolicyComparisonResponse:
+        result = self.policy_comparator.compare(doc_ids=doc_ids, profile=profile)
+        self.gateway.audit.log(
+            "POLICY_COMPARISON_COMPLETED",
+            {
+                "compared_doc_ids": [c.doc_id for c in result.compared_policies],
+                "family_size": result.profile_used.family_size,
+                "sum_insured_inr": result.profile_used.target_sum_insured_inr,
+            },
+        )
+        return result
+
+    def simulate_claim(
+        self,
+        claimed_bill_inr: int = 150_000,
+        hospital_room_rent_per_day_inr: int = 8_000,
+        days_hospitalized: int = 3,
+        procedure_type: str = "general_hospitalization",
+        sum_insured_inr: int = 1_000_000,
+        doc_ids: list[str] | None = None,
+    ) -> ClaimSimulationResponse:
+        return self.claim_simulator.simulate(
+            claimed_bill_inr=claimed_bill_inr,
+            hospital_room_rent_per_day_inr=hospital_room_rent_per_day_inr,
+            days_hospitalized=days_hospitalized,
+            procedure_type=procedure_type,
+            sum_insured_inr=sum_insured_inr,
+            doc_ids=doc_ids,
+        )
 
     def get_parent_index(self) -> dict[str, ParentChunk]:
         return dict(self._parent_index)

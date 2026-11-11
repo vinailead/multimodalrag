@@ -120,10 +120,10 @@ Implement the **Interactive Needs-Discovery & Probing Advisor (`src/insurance_mm
 - `tests/test_recommendation_advisor.py`
 
 ### Success Criteria (Self-Verifiable Checkboxes)
-- [ ] **Test**: `uv run pytest tests/test_recommendation_advisor.py -v` passes 100%, verifying:
+- [x] **Test**: `uv run pytest tests/test_recommendation_advisor.py -v` passes 100%, verifying:
   - Querying *"I am individual with age 26, non smoker and non drinker with family of 5 what is the best policy for me"* extracts `proposer_age=26`, `is_smoker=False`, `is_drinker=False`, `family_size=5`, sets `needs_probing=True`, returns 4 structured `probing_questions` with selectable options, AND returns ranked policy recommendations with indicative premiums for both Young Floater and Parent-Split scenarios.
   - Supplying the follow-up answers (e.g., `eldest_member_age=56`, `includes_parents=True`, `city_tier="tier_1"`, `target_sum_insured=1000000`, `has_ped=True`) transitions `needs_probing=False` and produces a refined, deterministic #1 recommendation (*HDFC ERGO Optima Secure* or *Tata AIG MediCare Premier* for zero room-rent cap & comprehensive cover, alongside *Bajaj Allianz Health Guard* and *Arogya Sanjeevani* as value/budget benchmarks) with exact GST-inclusive premiums.
-- [ ] **Quality Gate**: `uv run ruff check`, `uv run pyright`, and `uv run bandit` exit with code `0`.
+- [x] **Quality Gate**: `uv run ruff check`, `uv run pyright`, and `uv run bandit` exit with code `0`.
 
 ---
 
@@ -155,10 +155,10 @@ Implement the **Multi-Policy Comparator (`src/insurance_mmrag/advisor/policy_com
 - `tests/test_policy_comparator_and_simulator.py`
 
 ### Success Criteria (Self-Verifiable Checkboxes)
-- [ ] **Test**: `uv run pytest tests/test_policy_comparator_and_simulator.py -v` passes 100%, verifying:
+- [x] **Test**: `uv run pytest tests/test_policy_comparator_and_simulator.py -v` passes 100%, verifying:
   - Comparing `hdfc_ergo_optima_secure`, `tata_aig_medicare_premier`, `bajaj_allianz_health_guard`, `godigit_health_plus`, and `arogya_sanjeevani_national` returns a 10-row comparison table where every policy column has non-empty values, winner highlights, red-flag warnings, and valid PDF page citations.
   - Running `simulate_claim` for a ₹1,20,000 hospital bill with an ₹8,000/day room rent demonstrates how a policy with a ₹5,000/day room cap + proportionate deduction + 5% co-pay results in significant out-of-pocket expense compared to a policy with *Single Private A/C Room / Any Room* and 0% co-pay.
-- [ ] **Quality Gate**: `uv run ruff check`, `uv run pyright`, and `uv run pytest --cov=src/insurance_mmrag --cov-fail-under=80` exit with code `0`.
+- [x] **Quality Gate**: `uv run ruff check`, `uv run pyright`, and `uv run pytest --cov=src/insurance_mmrag --cov-fail-under=80` exit with code `0`.
 
 ---
 
