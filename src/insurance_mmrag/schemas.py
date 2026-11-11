@@ -376,6 +376,222 @@ class GroundedQueryResponse(BaseModel):
     model_used: str
     trace_spans: list[TraceSpan]
     cost_telemetry: CostTelemetryRecord
+    advisor_recommendation: AdvisorRecommendationResponse | None = None
+
+
+# --------------------------------------------------------------------------- advisor & comparison product
+def _empty_strings() -> list[str]:
+    return []
+
+
+class ApplicantProfile(BaseModel):
+    """Structured consumer underwriting profile for policy recommendation & premium calculation."""
+
+    proposer_age: int = Field(default=26, ge=18, le=99)
+    family_size: int = Field(default=1, ge=1, le=10)
+    is_smoker: bool = False
+    is_drinker: bool = False
+    includes_parents: bool | None = None
+    eldest_member_age: int | None = None
+    has_pre_existing_diseases: bool | None = None
+    pre_existing_conditions: list[str] = Field(default_factory=_empty_strings)
+    city_tier: Literal["tier_1", "tier_2", "tier_3"] | None = None
+    target_sum_insured_inr: int = Field(default=1_000_000, ge=100_000, le=10_000_000)
+    budget_priority: (
+        Literal["comprehensive_zero_copay", "value_balanced", "budget_low_premium"] | None
+    ) = None
+
+
+class PolicyFeatureCitation(BaseModel):
+    """Clause-level PDF citation backing a policy comparison cell or feature."""
+
+    doc_id: str
+    page_number: int
+    section_type: SectionType
+    clause_code: str | None = None
+    verbatim_quote: str
+
+
+class PolicyFeatureCard(BaseModel):
+    """Normalized, clause-grounded product specification for an Indian insurance policy."""
+
+    doc_id: str
+    policy_name: str
+    short_name: str
+    insurer_name: str
+    uin: str
+    policy_category: Literal[
+        "comprehensive_flagship",
+        "value_comprehensive",
+        "standard_irdai_health",
+        "personal_accident",
+    ]
+    tagline: str
+    sum_insured_options_inr: list[int]
+    day_1_cover_multiplier: float = 1.0
+    effective_cover_note: str
+    room_rent_limit: str
+    has_room_rent_cap: bool
+    max_room_rent_per_day_inr: int | None = None
+    room_rent_pct_of_si: float | None = None
+    proportionate_deduction_applies: bool
+    icu_limit: str
+    ped_waiting_months: int
+    specific_disease_waiting_months: int
+    initial_waiting_days: int = 30
+    cataract_limit_description: str
+    cataract_max_per_eye_inr: int | None = None
+    mandatory_copay_pct: float
+    consumables_covered: bool
+    consumables_note: str
+    restoration_benefit: str
+    no_claim_bonus_note: str
+    pre_post_hospitalization: str
+    ayush_coverage: str
+    healthy_lifestyle_discount_pct: float
+    key_strengths: list[str]
+    fine_print_warnings: list[str]
+    best_for_persona: str
+    feature_citations: dict[str, PolicyFeatureCitation]
+
+
+class PremiumBreakdown(BaseModel):
+    """Transparent indicative GST-inclusive annual and monthly premium calculation."""
+
+    doc_id: str
+    policy_name: str
+    sum_insured_inr: int
+    effective_day_1_cover_inr: int
+    pricing_age_used: int
+    member_count: int
+    city_tier: str
+    base_annual_premium_inr: int
+    floater_member_load_inr: int
+    city_zone_adjustment_inr: int
+    healthy_lifestyle_discount_inr: int
+    smoker_loading_inr: int
+    net_premium_before_gst_inr: int
+    gst_18_pct_inr: int
+    total_annual_premium_inr: int
+    monthly_emi_inr: int
+    cost_per_lakh_cover_inr: int
+    pricing_notes: list[str]
+
+
+class PortfolioSplitOption(BaseModel):
+    """Fiduciary analysis comparing a Single Family Floater vs. Split Portfolio (Young Nuclear + Parents)."""
+
+    recommended_strategy: Literal["SPLIT_PORTFOLIO", "SINGLE_FLOATER"]
+    headline: str
+    explanation: str
+    single_floater_annual_inr: int
+    split_young_floater_annual_inr: int
+    split_parents_floater_annual_inr: int
+    split_total_annual_inr: int
+    annual_savings_inr: int
+    combined_effective_cover_inr: int
+    key_reasons_to_split: list[str]
+
+
+class ProbingQuestion(BaseModel):
+    """Targeted follow-up underwriting question to refine policy recommendations."""
+
+    question_id: str
+    slot_name: str
+    question_text: str
+    why_it_matters: str
+    options: list[str]
+    current_value: str | None = None
+
+
+class RankedPolicyRecommendation(BaseModel):
+    """Scored policy recommendation with indicative premium and personalized rationale."""
+
+    rank: int
+    badge: str
+    match_score: float = Field(ge=0.0, le=100.0)
+    coverage_score: float
+    waiting_period_score: float
+    room_rent_score: float
+    value_score: float
+    feature_card: PolicyFeatureCard
+    premium: PremiumBreakdown
+    why_recommended_for_you: list[str]
+    watch_out_for: list[str]
+
+
+class ComparisonCell(BaseModel):
+    """Single provider cell in the side-by-side policy comparison matrix."""
+
+    doc_id: str
+    display_value: str
+    sentiment: Literal["positive", "neutral", "warning", "negative"]
+    is_winner: bool = False
+    citation: PolicyFeatureCitation | None = None
+
+
+class ComparisonRow(BaseModel):
+    """Standardized IRDAI comparison parameter row across multiple policies."""
+
+    parameter_key: str
+    parameter_label: str
+    consumer_tooltip: str
+    cells: dict[str, ComparisonCell]
+
+
+class ClaimSimulationItem(BaseModel):
+    """Out-of-pocket hospital bill breakdown for a single policy."""
+
+    doc_id: str
+    policy_name: str
+    short_name: str
+    claimed_bill_inr: int
+    room_rent_deduction_inr: int
+    procedure_sublimit_deduction_inr: int
+    consumables_deduction_inr: int
+    copay_deduction_inr: int
+    insurer_payable_inr: int
+    user_out_of_pocket_inr: int
+    coverage_ratio_pct: float
+    explanation: str
+
+
+class ClaimSimulationResponse(BaseModel):
+    """Side-by-side hospital bill out-of-pocket simulation across multiple policies."""
+
+    scenario_title: str
+    procedure_type: str
+    claimed_bill_inr: int
+    hospital_room_rent_per_day_inr: int
+    days_hospitalized: int
+    sum_insured_inr: int
+    results: list[ClaimSimulationItem]
+
+
+class PolicyComparisonResponse(BaseModel):
+    """Complete multi-policy side-by-side comparison response."""
+
+    profile_used: ApplicantProfile
+    compared_policies: list[PolicyFeatureCard]
+    premiums: dict[str, PremiumBreakdown]
+    comparison_rows: list[ComparisonRow]
+    claim_simulation: ClaimSimulationResponse
+    fiduciary_summary: str
+
+
+class AdvisorRecommendationResponse(BaseModel):
+    """Complete interactive needs-discovery, probing, recommendation, and comparison response."""
+
+    query: str
+    extracted_profile: ApplicantProfile
+    needs_probing: bool
+    completeness_pct: int
+    probing_questions: list[ProbingQuestion]
+    executive_advisory_summary: str
+    portfolio_split_advice: PortfolioSplitOption
+    ranked_policies: list[RankedPolicyRecommendation]
+    comparison_matrix: list[ComparisonRow]
+    claim_simulation: ClaimSimulationResponse
 
 
 # --------------------------------------------------------------------------- evaluation
@@ -405,3 +621,6 @@ class RAGTriadScorecard(BaseModel):
     total_cases: int
     total_cost_usd: float
     cases: list[BenchmarkCaseResult]
+
+
+GroundedQueryResponse.model_rebuild()

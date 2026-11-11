@@ -95,6 +95,18 @@ This file implements the **Recursive Workflow Planning** memory loop. Every time
   4. Redesigned `ui/streamlit_app.py` with `st.form("insurance_query_form")` so pressing Enter immediately executes the query, added instant sample query execution, and placed a prominent **Direct Answer Card** above collapsible evidence citations and visual crops.
   5. Cleared stale LLM disk cache in `data/cache/llm` and verified all 10 ADLC quality gates (`npm run check`) passing 100% (65 pytest unit tests at 94.52% coverage, 22 vitest unit tests at 99.62% coverage, and 6/6 Playwright E2E tests).
 
+---
+
+## Log Entry #012 — V2 Phase 1: Provider Catalog Normalization & Family Floater Split Actuarial Math
+- **Timestamp**: `2026-11-11T18:48:00+05:30`
+- **Observation**:
+  1. In Indian health insurance underwriting, Family Floater base premiums are anchored to the **eldest member's age band**. When a 26-year-old proposer adds parents aged 55–58 into a single 5-member floater, the entire 5-member pool is priced at the 56–60 age bracket (+300% rate jump), and any routine parent hospitalization resets the entire family's No-Claim Bonus.
+  2. Ruff's `RUF001` rule flags Unicode en-dashes (`–`) in Python string literals as ambiguous characters; standardizing on ASCII hyphens (`-`) inside Python source strings avoids lint failures while maintaining clean formatting.
+- **Recursive Action Taken**:
+  1. Built `src/insurance_mmrag/domain/policy_catalog.py` normalizing all 6 policies in `manifest.json` into clause-cited `PolicyFeatureCard` objects.
+  2. Built `src/insurance_mmrag/domain/premium_calculator.py` with age-band base rates, Sum Insured scaling, non-smoker/non-drinker healthy-lifestyle discounts (5%–7.5%), 18% GST, and `evaluate_portfolio_split()` comparing Single Floater vs. Split Portfolio (Young Nuclear Floater + Parent Floater).
+
+
   2. Tightened `PiiRedactor` Aadhaar regex lookbehind to `(?<![a-zA-Z\d\\+])`, ensuring escapes and variable identifiers are never falsely matched as Aadhaar numbers.
   3. Configured `table_vision_parser.py` to use `ensure_ascii=False` and added resilient escape-sequence recovery in `stub_gemini.py` `_parse_rows`.
   4. Updated `api/main.py` and `ui/streamlit_app.py` with dynamic manifest discovery and on-demand policy ingestion.
