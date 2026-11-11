@@ -35,12 +35,14 @@ def test_mcp_tool_server_lifecycle(pipeline_with_doc: InsuranceMMRAGPipeline) ->
 
     # 1. List tools
     tools = server.list_tools()
-    assert len(tools) == 4
+    assert len(tools) == 6
     tool_names = [t["name"] for t in tools]
     assert "query_irdai_policy" in tool_names
     assert "lookup_irdai_clause" in tool_names
     assert "inspect_policy_table" in tool_names
     assert "get_rag_triad_scorecard" in tool_names
+    assert "recommend_best_insurance_policy" in tool_names
+    assert "compare_insurance_policies" in tool_names
 
     # 2. Execute query_irdai_policy
     q_res = server.execute_tool("query_irdai_policy", {"query": "What is the cataract sub-limit?"})

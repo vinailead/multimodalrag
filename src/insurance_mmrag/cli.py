@@ -146,6 +146,54 @@ def cmd_benchmark(_args: argparse.Namespace) -> None:
     console.print(tbl)
 
 
+def cmd_recommend(args: argparse.Namespace) -> None:
+    pipeline = create_default_pipeline(use_stub=True)
+    query_str = (
+        args.query
+        or f"I am individual with age {args.age}, non smoker and non drinker with family of {args.family_size} what is the best policy for me"
+    )
+    rec = pipeline.recommend_policies(user_query=query_str)
+
+    console.print(
+        Panel(
+            rec.executive_advisory_summary,
+            title="AI Health Insurance Advisor & Portfolio Recommendation",
+            border_style="green",
+        )
+    )
+    tbl = Table(title="Ranked IRDAI Health Policies & Indicative Premiums")
+    tbl.add_column("Rank / Badge", style="cyan")
+    tbl.add_column("Policy Name", style="bold white")
+    tbl.add_column("Match Score", style="green")
+    tbl.add_column("Annual Premium (incl. GST)", style="yellow")
+    tbl.add_column("Day-1 Cover", style="magenta")
+
+    for r in rec.ranked_policies:
+        tbl.add_row(
+            r.badge,
+            r.feature_card.short_name,
+            f"{r.match_score:.1f}%",
+            f"₹{r.premium.total_annual_premium_inr:,}/yr (₹{r.premium.monthly_emi_inr:,}/mo)",
+            f"₹{r.premium.effective_day_1_cover_inr // 100_000} Lakhs",
+        )
+    console.print(tbl)
+
+
+def cmd_compare(args: argparse.Namespace) -> None:
+    pipeline = create_default_pipeline(use_stub=True)
+    comp = pipeline.compare_policies(doc_ids=args.policies)
+
+    tbl = Table(title="Side-by-Side IRDAI Policy Comparison Matrix")
+    tbl.add_column("Parameter", style="cyan")
+    for p in comp.compared_policies:
+        tbl.add_column(p.short_name, style="white")
+
+    for row in comp.comparison_rows:
+        cells = [row.cells[p.doc_id].display_value for p in comp.compared_policies]
+        tbl.add_row(row.parameter_label, *cells)
+    console.print(tbl)
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(
         prog="mmrag", description="Indian Insurance Multimodal RAG CLI"
@@ -178,6 +226,23 @@ def main() -> None:
     # Benchmark
     p_bench = subparsers.add_parser("benchmark", help="Run RAG Triad benchmark evaluation")
     p_bench.set_defaults(func=cmd_benchmark)
+
+    # Recommend
+    p_rec = subparsers.add_parser("recommend", help="Get personalized policy recommendations")
+    p_rec.add_argument("--age", type=int, default=26, help="Proposer age")
+    p_rec.add_argument("--family-size", type=int, default=5, help="Total family members")
+    p_rec.add_argument("--query", default=None, help="Optional custom advisory question")
+    p_rec.set_defaults(func=cmd_recommend)
+
+    # Compare
+    p_comp = subparsers.add_parser("compare", help="Compare policies side-by-side")
+    p_comp.add_argument(
+        "--policies",
+        nargs="*",
+        default=None,
+        help="Optional list of policy doc_ids to compare",
+    )
+    p_comp.set_defaults(func=cmd_compare)
 
     args = parser.parse_args()
     args.func(args)

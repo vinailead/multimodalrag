@@ -22,9 +22,13 @@ from insurance_mmrag.ingestion.sample_policy_factory import (
 from insurance_mmrag.mcp_tools import MCPToolServer
 from insurance_mmrag.pipeline import InsuranceMMRAGPipeline, create_default_pipeline
 from insurance_mmrag.schemas import (
+    AdvisorRecommendationResponse,
+    ApplicantProfile,
     AuditLogEntry,
+    ClaimSimulationResponse,
     FinOpsSummary,
     GroundedQueryResponse,
+    PolicyComparisonResponse,
     RAGTriadScorecard,
 )
 
@@ -128,6 +132,38 @@ class IngestResponse(BaseModel):
 class McpExecuteRequest(BaseModel):
     tool_name: str
     arguments: dict[str, Any] = Field(default_factory=dict)
+
+
+class AdvisorRecommendRequest(BaseModel):
+    query: str = Field(
+        default="I am individual with age 26, non smoker and non drinker with family of 5 what is the best policy for me",
+        min_length=2,
+        description="Natural language advisory query or family description.",
+    )
+    profile: ApplicantProfile | None = Field(
+        default=None,
+        description="Optional structured ApplicantProfile overrides from interactive probing answers.",
+    )
+
+
+class PolicyCompareRequest(BaseModel):
+    doc_ids: list[str] | None = Field(
+        default=None,
+        description="List of policy doc_ids to compare side-by-side.",
+    )
+    profile: ApplicantProfile | None = Field(
+        default=None,
+        description="Optional ApplicantProfile for personalized premium calculation.",
+    )
+
+
+class ClaimSimulateRequest(BaseModel):
+    claimed_bill_inr: int = Field(default=150_000, ge=1_000)
+    hospital_room_rent_per_day_inr: int = Field(default=8_000, ge=500)
+    days_hospitalized: int = Field(default=3, ge=1)
+    procedure_type: str = Field(default="general_hospitalization")
+    sum_insured_inr: int = Field(default=1_000_000, ge=100_000)
+    doc_ids: list[str] | None = None
 
 
 # --------------------------------------------------------------------------- Endpoints
@@ -254,6 +290,37 @@ def query_policy(req: QueryRequest) -> GroundedQueryResponse:
             except Exception as exc:
                 logger.debug("Failed on-demand ingestion for %s: %s", req.doc_id, exc)
     return pipe.query(user_query=req.query, doc_id=req.doc_id, top_k=req.top_k)
+
+
+@app.post("/api/v1/advisor/recommend", response_model=AdvisorRecommendationResponse)
+def recommend_policies_endpoint(req: AdvisorRecommendRequest) -> AdvisorRecommendationResponse:
+    pipe = get_pipeline()
+    return pipe.recommend_policies(user_query=req.query, profile=req.profile)
+
+
+@app.post("/api/v1/policies/compare", response_model=PolicyComparisonResponse)
+def compare_policies_endpoint(req: PolicyCompareRequest) -> PolicyComparisonResponse:
+    pipe = get_pipeline()
+    try:
+        return pipe.compare_policies(doc_ids=req.doc_ids, profile=req.profile)
+    except KeyError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+
+@app.post("/api/v1/policies/simulate-claim", response_model=ClaimSimulationResponse)
+def simulate_claim_endpoint(req: ClaimSimulateRequest) -> ClaimSimulationResponse:
+    pipe = get_pipeline()
+    try:
+        return pipe.simulate_claim(
+            claimed_bill_inr=req.claimed_bill_inr,
+            hospital_room_rent_per_day_inr=req.hospital_room_rent_per_day_inr,
+            days_hospitalized=req.days_hospitalized,
+            procedure_type=req.procedure_type,
+            sum_insured_inr=req.sum_insured_inr,
+            doc_ids=req.doc_ids,
+        )
+    except KeyError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
 
 
 @app.get("/api/v1/crops/{crop_filename}")

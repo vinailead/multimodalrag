@@ -117,6 +117,17 @@ This file implements the **Recursive Workflow Planning** memory loop. Every time
   1. Built `RecommendationEngine` (`src/insurance_mmrag/advisor/recommendation_engine.py`), `PolicyComparator` (`src/insurance_mmrag/advisor/policy_comparator.py`), and `ClaimSimulator` (`src/insurance_mmrag/advisor/claim_simulator.py`).
   2. Integrated advisory auto-detection into `InsuranceMMRAGPipeline.query()` so general queries asking for the best policy automatically return structured `advisor_recommendation` payloads.
 
+---
+
+## Log Entry #014 — V2 Phase 4: FastAPI Advisory & Comparison Endpoints, MCP Tools & CLI
+- **Timestamp**: `2026-11-11T21:44:00+05:30`
+- **Observation**:
+  1. In strict Pyright, `isinstance(raw_ids, list)` narrows an `Any` or `object` dictionary value to `list[Unknown]`; explicitly casting via `cast(list[object], raw_ids)` before list comprehension preserves 0-error static type checking.
+- **Recursive Action Taken**:
+  1. Added `POST /api/v1/advisor/recommend`, `POST /api/v1/policies/compare`, and `POST /api/v1/policies/simulate-claim` to `src/insurance_mmrag/api/main.py`.
+  2. Added `recommend_best_insurance_policy` and `compare_insurance_policies` MCP tools in `src/insurance_mmrag/mcp_tools.py` and `recommend`/`compare` subcommands in `src/insurance_mmrag/cli.py`.
+
+
 
 
   2. Tightened `PiiRedactor` Aadhaar regex lookbehind to `(?<![a-zA-Z\d\\+])`, ensuring escapes and variable identifiers are never falsely matched as Aadhaar numbers.

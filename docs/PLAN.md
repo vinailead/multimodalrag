@@ -183,12 +183,12 @@ Expose the new consumer product capabilities through clean REST API endpoints in
 - Updated `tests/test_api_and_cli.py` and `tests/test_mcp_and_benchmark.py`
 
 ### Success Criteria (Self-Verifiable Checkboxes)
-- [ ] **API Verification (`TestClient`)**: `uv run pytest tests/test_api_and_cli.py -v` passes 100%, verifying:
+- [x] **API Verification (`TestClient`)**: `uv run pytest tests/test_api_and_cli.py -v` passes 100%, verifying:
   - `POST /api/v1/advisor/recommend` with `{"query": "I am individual with age 26, non smoker and non drinker with family of 5 what is the best policy for me"}` returns `200 OK` with `needs_probing: true`, `probing_questions` (len $\ge 3$), `ranked_policies` (len $\ge 4$ with annual/monthly ₹ premiums), and `portfolio_split_advice`.
   - `POST /api/v1/policies/compare` returns `200 OK` with `comparison_rows` (10 rows) and grounded citations.
   - `POST /api/v1/policies/simulate-claim` returns `200 OK` with per-policy `insurer_payable_inr` and `out_of_pocket_inr`.
   - `POST /api/v1/query` with a recommendation query seamlessly populates `advisor_recommendation` in `GroundedQueryResponse`.
-- [ ] **CLI Verification**: `uv run mmrag recommend --age 26 --family-size 5` and `uv run mmrag compare` exit with code `0` and render formatted tables.
+- [x] **CLI Verification**: `uv run mmrag recommend --age 26 --family-size 5` and `uv run mmrag compare` exit with code `0` and render formatted tables.
 
 ---
 

@@ -2,12 +2,12 @@
 
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, cast
 
 from insurance_mmrag.domain.irdai import IRDAI_STANDARD_EXCLUSIONS
 from insurance_mmrag.evals.benchmark_runner import BenchmarkRunner
 from insurance_mmrag.pipeline import InsuranceMMRAGPipeline
-from insurance_mmrag.schemas import SectionType
+from insurance_mmrag.schemas import ApplicantProfile, SectionType
 
 
 class MCPToolServer:
@@ -74,6 +74,42 @@ class MCPToolServer:
                 "description": "Run and return quantitative RAG Triad benchmark metrics (Recall@K, Faithfulness, Abstention F1, Table Exactness).",
                 "parameters": {"type": "object", "properties": {}},
             },
+            {
+                "name": "recommend_best_insurance_policy",
+                "description": (
+                    "Analyze an individual or family profile, generate follow-up probing questions, "
+                    "evaluate Family Floater vs Parent-Split options, and rank eligible IRDAI policies with GST-inclusive premiums."
+                ),
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "query": {
+                            "type": "string",
+                            "description": "Natural language description of applicant profile and family needs.",
+                        },
+                        "proposer_age": {"type": "integer", "description": "Age of proposer."},
+                        "family_size": {"type": "integer", "description": "Total family members."},
+                    },
+                    "required": ["query"],
+                },
+            },
+            {
+                "name": "compare_insurance_policies",
+                "description": (
+                    "Compare multiple Indian health insurance policies side-by-side across 10 IRDAI clause-grounded parameters "
+                    "with indicative premiums and hospital bill out-of-pocket simulation."
+                ),
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "doc_ids": {
+                            "type": "array",
+                            "items": {"type": "string"},
+                            "description": "Optional list of policy doc_ids to compare.",
+                        },
+                    },
+                },
+            },
         ]
 
     def execute_tool(self, name: str, arguments: dict[str, Any]) -> dict[str, Any]:
@@ -125,5 +161,29 @@ class MCPToolServer:
             runner = BenchmarkRunner(self.pipeline)
             card = runner.run_benchmark()
             return card.model_dump(mode="json")
+
+        if name == "recommend_best_insurance_policy":
+            query_str = str(
+                arguments.get(
+                    "query",
+                    "I am individual with age 26, non smoker and non drinker with family of 5 what is the best policy for me",
+                )
+            )
+            prof: ApplicantProfile | None = None
+            if "proposer_age" in arguments or "family_size" in arguments:
+                prof = ApplicantProfile(
+                    proposer_age=int(arguments.get("proposer_age", 26)),
+                    family_size=int(arguments.get("family_size", 5)),
+                )
+            rec = self.pipeline.recommend_policies(user_query=query_str, profile=prof)
+            return rec.model_dump(mode="json")
+
+        if name == "compare_insurance_policies":
+            raw_ids = arguments.get("doc_ids")
+            doc_ids = (
+                [str(x) for x in cast(list[object], raw_ids)] if isinstance(raw_ids, list) else None
+            )
+            comp = self.pipeline.compare_policies(doc_ids=doc_ids)
+            return comp.model_dump(mode="json")
 
         return {"error": f"Tool '{name}' is not recognized."}

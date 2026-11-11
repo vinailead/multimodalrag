@@ -138,3 +138,94 @@ def test_cli_commands(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
     # Benchmark
     monkeypatch.setattr("sys.argv", ["mmrag", "benchmark"])
     cli_main()
+
+    # Recommend
+    monkeypatch.setattr("sys.argv", ["mmrag", "recommend", "--age", "26", "--family-size", "5"])
+    cli_main()
+
+    # Compare
+    monkeypatch.setattr(
+        "sys.argv",
+        ["mmrag", "compare", "--policies", "hdfc_ergo_optima_secure", "arogya_sanjeevani_national"],
+    )
+    cli_main()
+
+
+def test_api_advisor_compare_and_simulate_endpoints(client: httpx.Client) -> None:
+    # 1. Advisor Recommend endpoint
+    resp_rec: httpx.Response = client.post(
+        "/api/v1/advisor/recommend",
+        json={
+            "query": "I am individual with age 26, non smoker and non drinker with family of 5 what is the best policy for me"
+        },
+    )
+    assert resp_rec.status_code == 200
+    rec_data = cast(dict[str, Any], resp_rec.json())
+    assert rec_data["needs_probing"] is True
+    assert len(rec_data["probing_questions"]) >= 3
+    assert len(rec_data["ranked_policies"]) >= 4
+    assert rec_data["portfolio_split_advice"]["recommended_strategy"] == "SPLIT_PORTFOLIO"
+
+    # 2. Policies Compare endpoint
+    resp_comp: httpx.Response = client.post(
+        "/api/v1/policies/compare",
+        json={
+            "doc_ids": [
+                "hdfc_ergo_optima_secure",
+                "tata_aig_medicare_premier",
+                "arogya_sanjeevani_national",
+            ],
+            "profile": {
+                "proposer_age": 26,
+                "family_size": 5,
+                "is_smoker": False,
+                "is_drinker": False,
+                "target_sum_insured_inr": 1_000_000,
+            },
+        },
+    )
+    assert resp_comp.status_code == 200
+    comp_data = cast(dict[str, Any], resp_comp.json())
+    assert len(comp_data["comparison_rows"]) == 10
+    assert len(comp_data["compared_policies"]) == 3
+
+    # 3. Simulate Claim endpoint
+    resp_sim: httpx.Response = client.post(
+        "/api/v1/policies/simulate-claim",
+        json={
+            "claimed_bill_inr": 150_000,
+            "hospital_room_rent_per_day_inr": 8_000,
+            "days_hospitalized": 3,
+            "procedure_type": "general_hospitalization",
+            "sum_insured_inr": 1_000_000,
+            "doc_ids": ["hdfc_ergo_optima_secure", "arogya_sanjeevani_national"],
+        },
+    )
+    assert resp_sim.status_code == 200
+    sim_data = cast(dict[str, Any], resp_sim.json())
+    assert len(sim_data["results"]) == 2
+
+    # 4. MCP new advisory & comparison tools
+    resp_mcp_rec: httpx.Response = client.post(
+        "/api/v1/mcp/execute",
+        json={
+            "tool_name": "recommend_best_insurance_policy",
+            "arguments": {
+                "query": "Age 26 non smoker family of 5",
+                "proposer_age": 26,
+                "family_size": 5,
+            },
+        },
+    )
+    assert resp_mcp_rec.status_code == 200
+    assert "ranked_policies" in resp_mcp_rec.json()
+
+    resp_mcp_comp: httpx.Response = client.post(
+        "/api/v1/mcp/execute",
+        json={
+            "tool_name": "compare_insurance_policies",
+            "arguments": {"doc_ids": ["hdfc_ergo_optima_secure", "arogya_sanjeevani_national"]},
+        },
+    )
+    assert resp_mcp_comp.status_code == 200
+    assert "comparison_rows" in resp_mcp_comp.json()

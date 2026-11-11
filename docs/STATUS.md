@@ -20,6 +20,7 @@
 | **V2 Phase 1** | Provider Benefit Catalog Normalization & Indicative Actuarial Premium Engine | **COMPLETED** | 100% (`test_premium_and_catalog.py`, ruff, pyright, bandit) |
 | **V2 Phase 2** | Conversational Needs-Discovery & Probing Recommendation Engine | **COMPLETED** | 100% (`test_recommendation_advisor.py`, ruff, pyright, bandit) |
 | **V2 Phase 3** | Multi-Policy Side-by-Side Comparison Matrix & Out-of-Pocket Claim Bill Simulator | **COMPLETED** | 100% (`test_policy_comparator_and_simulator.py`, ruff, pyright, bandit) |
+| **V2 Phase 4** | FastAPI Product Endpoints, Conversational Query Routing, MCP Tools & CLI | **COMPLETED** | 100% (`test_api_and_cli.py`, ruff, pyright, bandit) |
 
 ---
 
