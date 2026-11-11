@@ -3,11 +3,15 @@
  */
 
 import type {
+  AdvisorRecommendationResponse,
+  ApplicantProfile,
+  ClaimSimulationResponse,
   FinOpsSummary,
   GroundedQueryResponse,
   HealthStatus,
   IndexedPolicy,
   McpToolDefinition,
+  PolicyComparisonResponse,
   RAGTriadScorecard,
 } from "./types.ts";
 
@@ -89,4 +93,68 @@ export async function executeMcpTool(
     throw new Error(`Failed to execute MCP tool: ${resp.statusText}`);
   }
   return (await resp.json()) as Record<string, unknown>;
+}
+
+export async function fetchAdvisorRecommendation(
+  userQuery: string,
+  profile?: Partial<ApplicantProfile>,
+  probingAnswers?: Record<string, string>,
+): Promise<AdvisorRecommendationResponse> {
+  const payload: Record<string, unknown> = {
+    user_query: userQuery,
+    probing_answers: probingAnswers ?? {},
+  };
+  if (profile) {
+    payload.profile = profile;
+  }
+  const resp = await fetch(`${BASE_URL}/api/v1/advisor/recommend`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+  if (!resp.ok) {
+    throw new Error(`Failed to fetch advisor recommendation: ${resp.statusText}`);
+  }
+  return (await resp.json()) as AdvisorRecommendationResponse;
+}
+
+export async function fetchPolicyComparison(
+  docIds?: string[],
+  profile?: Partial<ApplicantProfile>,
+): Promise<PolicyComparisonResponse> {
+  const payload: Record<string, unknown> = {};
+  if (docIds && docIds.length > 0) {
+    payload.doc_ids = docIds;
+  }
+  if (profile) {
+    payload.profile = profile;
+  }
+  const resp = await fetch(`${BASE_URL}/api/v1/policies/compare`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+  if (!resp.ok) {
+    throw new Error(`Failed to fetch policy comparison: ${resp.statusText}`);
+  }
+  return (await resp.json()) as PolicyComparisonResponse;
+}
+
+export async function fetchClaimSimulation(params: {
+  doc_ids?: string[];
+  hospital_bill_inr: number;
+  room_rent_per_day_inr: number;
+  stay_days: number;
+  is_cataract: boolean;
+  sum_insured_inr?: number;
+}): Promise<ClaimSimulationResponse> {
+  const resp = await fetch(`${BASE_URL}/api/v1/policies/simulate-claim`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(params),
+  });
+  if (!resp.ok) {
+    throw new Error(`Failed to simulate claim: ${resp.statusText}`);
+  }
+  return (await resp.json()) as ClaimSimulationResponse;
 }

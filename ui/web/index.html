@@ -90,15 +90,28 @@
         </section>
       </aside>
 
-      <!-- Center Workspace: Grounded Q&A -->
+      <!-- Center Workspace: Grounded Q&A, AI Advisor & Multi-Policy Comparator -->
       <main class="m3-workspace" role="main" aria-label="Grounded policy question answering workspace">
+        <!-- 3-Mode Consumer Product Navigation Bar -->
+        <nav class="m3-pills-row" id="product-mode-nav" aria-label="Product mode selector">
+          <button type="button" id="tab-qa" class="m3-btn-primary" data-mode="qa">
+            🔍 Ask Policy Q&amp;A
+          </button>
+          <button type="button" id="tab-advisor" class="m3-pill" data-mode="advisor">
+            🧭 Find Best Policy for Me (AI Advisor)
+          </button>
+          <button type="button" id="tab-compare" class="m3-pill" data-mode="compare">
+            ⚖️ Compare All Policies &amp; Claim Simulator
+          </button>
+        </nav>
+
         <!-- Search Bar -->
         <div class="m3-search-bar">
           <input
             type="text"
             id="query-input"
             class="m3-search-input"
-            placeholder="Ask anything about exclusions, waiting periods, room rent, or cataract limits..."
+            placeholder="Ask a policy question OR tell us about yourself (e.g., 26yo non-smoker family of 5 best policy)..."
             aria-label="Enter insurance policy question"
           />
           <button type="button" id="query-submit-btn" class="m3-btn-primary">Ask</button>
@@ -107,11 +120,14 @@
         <!-- Sample Query Pills -->
         <div class="m3-pills-row" aria-label="Sample questions">
           <span class="m3-pill-label">Sample Inquiries:</span>
+          <button type="button" class="m3-pill" id="pill-advisor-demo" data-query="I am individual with age 26, non smoker and non drinker with family of 5 what is the best policy for me">
+            🧭 26yo Family of 5 (Best Policy Advisor)
+          </button>
           <button type="button" class="m3-pill" data-query="What is the waiting period for cataract surgery under this policy?">
             Cataract Waiting Period
           </button>
           <button type="button" class="m3-pill" data-query="What is the daily room rent sub-limit and mandatory co-payment percentage?">
-            Room Rent & Co-Pay
+            Room Rent &amp; Co-Pay
           </button>
           <button type="button" class="m3-pill" data-query="What is the waiting period for Pre-Existing Diseases under Code-Excl01?">
             Pre-Existing Diseases (Excl01)
@@ -179,6 +195,12 @@
           </h3>
           <div id="citations-slot"></div>
         </section>
+
+        <!-- AI Policy Advisor & Probing Slot -->
+        <div id="advisor-results-slot" class="hidden" aria-label="AI Policy Advisor recommendations and probing questions"></div>
+
+        <!-- Multi-Policy Comparison & Claim Simulator Slot -->
+        <div id="comparison-results-slot" class="hidden" aria-label="Side-by-side policy comparison matrix"></div>
 
         <!-- Execution Waterfall Section -->
         <div id="waterfall-slot"></div>

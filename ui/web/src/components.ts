@@ -3,12 +3,18 @@
  */
 
 import type {
+  AdvisorRecommendationResponse,
+  ClaimSimulationResponse,
   FinOpsSummary,
   GroundedCitation,
   McpToolDefinition,
+  PolicyComparisonResponse,
   PolicyCoverageSummary,
+  PortfolioSplitOption,
+  ProbingQuestion,
   QueryIntentClassification,
   RAGTriadScorecard,
+  RankedPolicyRecommendation,
   TraceSpan,
 } from "./types.ts";
 
@@ -314,6 +320,326 @@ export function renderInspector(citation: GroundedCitation | null): HTMLElement 
   `;
 
   return container;
+}
+
+export function renderProbingQuestions(
+  questions: ProbingQuestion[],
+  onSelectOption?: (slotName: string, optionText: string) => void,
+): HTMLElement {
+  const container = document.createElement("div");
+  container.className = "m3-card";
+  container.id = "probing-questions-card";
+
+  const header = document.createElement("div");
+  header.className = "m3-card-title";
+  header.innerHTML = `<span>🧭 Smart Follow-Up Questions (Needs-Discovery Probing)</span><span class="m3-badge m3-badge-warning">${questions.length} Slots Needed</span>`;
+  container.appendChild(header);
+
+  for (const q of questions) {
+    const qBlock = document.createElement("div");
+    qBlock.className = "m3-probe-block";
+    qBlock.style.marginBottom = "12px";
+    qBlock.style.padding = "10px 12px";
+    qBlock.style.background = "var(--md-sys-color-surface-container-low)";
+    qBlock.style.borderRadius = "var(--md-sys-shape-corner-small)";
+
+    const qTitle = document.createElement("div");
+    qTitle.style.fontWeight = "600";
+    qTitle.style.fontSize = "13px";
+    qTitle.style.marginBottom = "4px";
+    qTitle.textContent = q.question_text;
+
+    const qWhy = document.createElement("div");
+    qWhy.style.fontSize = "11px";
+    qWhy.style.color = "var(--md-sys-color-on-surface-variant)";
+    qWhy.style.marginBottom = "8px";
+    qWhy.textContent = `Why it matters: ${q.why_it_matters}`;
+
+    const optsRow = document.createElement("div");
+    optsRow.className = "m3-pills-row";
+    q.options.forEach((opt, idx) => {
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "m3-pill m3-probe-option";
+      btn.setAttribute("data-probe-slot", q.slot_name);
+      btn.setAttribute("data-probe-option", opt);
+      btn.setAttribute("data-testid", `probe-${q.question_id}-${idx}`);
+      btn.textContent = opt;
+      btn.addEventListener("click", () => {
+        optsRow
+          .querySelectorAll(".m3-probe-option")
+          .forEach((el) => el.classList.remove("m3-badge-primary"));
+        btn.classList.add("m3-badge-primary");
+        if (onSelectOption) {
+          onSelectOption(q.slot_name, opt);
+        }
+      });
+      optsRow.appendChild(btn);
+    });
+
+    qBlock.appendChild(qTitle);
+    qBlock.appendChild(qWhy);
+    qBlock.appendChild(optsRow);
+    container.appendChild(qBlock);
+  }
+
+  return container;
+}
+
+export function renderPortfolioSplitBanner(split: PortfolioSplitOption): HTMLElement {
+  const banner = document.createElement("div");
+  banner.id = "portfolio-split-banner";
+  banner.className = "m3-banner m3-banner-verified";
+  banner.style.flexDirection = "column";
+  banner.innerHTML = `
+    <div style="display: flex; align-items: center; justify-content: space-between; width: 100%;">
+      <strong>💡 ${escapeHtml(split.headline)}</strong>
+      <span class="m3-badge m3-badge-verified">Save ₹${split.annual_savings_inr.toLocaleString("en-IN")}/yr</span>
+    </div>
+    <p style="font-size: 13px; margin-top: 4px;">${escapeHtml(split.rationale)}</p>
+    <div class="m3-stat-grid" style="width: 100%; margin-top: 8px; grid-template-columns: repeat(3, 1fr);">
+      <div class="m3-stat-item">
+        <div class="m3-stat-label">Single Floater (All Together)</div>
+        <div class="m3-stat-value">₹${split.single_floater_annual_inr.toLocaleString("en-IN")}/yr</div>
+      </div>
+      <div class="m3-stat-item">
+        <div class="m3-stat-label">Split 1: ${escapeHtml(split.young_family_policy_name)}</div>
+        <div class="m3-stat-value">₹${split.young_family_annual_inr.toLocaleString("en-IN")}/yr</div>
+      </div>
+      <div class="m3-stat-item">
+        <div class="m3-stat-label">Split 2: ${escapeHtml(split.parents_policy_name)}</div>
+        <div class="m3-stat-value">₹${split.parents_annual_inr.toLocaleString("en-IN")}/yr</div>
+      </div>
+    </div>
+  `;
+  return banner;
+}
+
+export function renderRecommendationCards(
+  recommendations: RankedPolicyRecommendation[],
+): HTMLElement {
+  const container = document.createElement("div");
+  container.id = "advisor-recommendations-grid";
+  container.style.display = "flex";
+  container.style.flexDirection = "column";
+  container.style.gap = "12px";
+
+  for (const rec of recommendations) {
+    const card = document.createElement("div");
+    card.className = "m3-card";
+    card.setAttribute("data-testid", `rec-card-${rec.rank}`);
+
+    const highlightsHtml = rec.why_this_fits
+      .map((w) => `<li style="margin-left: 16px; font-size: 13px;">✅ ${escapeHtml(w)}</li>`)
+      .join("");
+    const tradeOffsHtml = rec.trade_offs
+      .map(
+        (t) =>
+          `<li style="margin-left: 16px; font-size: 12px; color: var(--md-sys-color-warning-text);">⚠️ ${escapeHtml(t)}</li>`,
+      )
+      .join("");
+
+    card.innerHTML = `
+      <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; flex-wrap: wrap; gap: 8px;">
+        <div>
+          <span class="m3-badge m3-badge-primary" style="margin-right: 6px;">#${rec.rank} ${escapeHtml(rec.badge_label)}</span>
+          <strong style="font-size: 16px;">${escapeHtml(rec.policy.policy_name)}</strong>
+          <div style="font-size: 11px; color: var(--md-sys-color-on-surface-variant);">
+            ${escapeHtml(rec.policy.insurer_name)} · UIN: ${escapeHtml(rec.policy.uin)}
+          </div>
+        </div>
+        <div style="text-align: right;">
+          <span class="m3-badge m3-badge-verified">Match: ${rec.match_score_pct.toFixed(1)}%</span>
+          <div style="font-size: 16px; font-weight: 700; color: var(--md-sys-color-primary); margin-top: 2px;">
+            ₹${rec.premium.total_annual_premium_inr.toLocaleString("en-IN")}/yr
+            <span style="font-size: 12px; font-weight: 500; color: var(--md-sys-color-on-surface-variant);">
+              (₹${rec.premium.monthly_emi_inr.toLocaleString("en-IN")}/mo incl. 18% GST)
+            </span>
+          </div>
+        </div>
+      </div>
+      <div class="m3-stat-grid" style="grid-template-columns: repeat(4, 1fr); margin-bottom: 10px;">
+        <div class="m3-stat-item">
+          <div class="m3-stat-label">Room Rent</div>
+          <div class="m3-stat-value" style="font-size: 12px;">${escapeHtml(rec.policy.room_rent_limit)}</div>
+        </div>
+        <div class="m3-stat-item">
+          <div class="m3-stat-label">PED Waiting</div>
+          <div class="m3-stat-value" style="font-size: 12px;">${rec.policy.ped_waiting_months} Months</div>
+        </div>
+        <div class="m3-stat-item">
+          <div class="m3-stat-label">Co-Payment</div>
+          <div class="m3-stat-value" style="font-size: 12px;">${rec.policy.mandatory_copay_pct}%</div>
+        </div>
+        <div class="m3-stat-item">
+          <div class="m3-stat-label">Healthy Discount</div>
+          <div class="m3-stat-value" style="font-size: 12px;">-₹${rec.premium.healthy_lifestyle_discount_inr.toLocaleString("en-IN")}</div>
+        </div>
+      </div>
+      <ul style="list-style: none; margin-bottom: 6px;">${highlightsHtml}</ul>
+      <ul style="list-style: none;">${tradeOffsHtml}</ul>
+    `;
+    container.appendChild(card);
+  }
+
+  return container;
+}
+
+export function renderComparisonMatrix(comp: PolicyComparisonResponse): HTMLElement {
+  const wrapper = document.createElement("div");
+  wrapper.className = "m3-card";
+  wrapper.id = "comparison-matrix-card";
+  wrapper.style.overflowX = "auto";
+
+  const title = document.createElement("div");
+  title.className = "m3-card-title";
+  title.innerHTML = `<span>⚖️ Side-by-Side Policy Comparison Matrix (${comp.compared_policies.length} Policies)</span><span class="m3-badge m3-badge-primary">Clause-Cited</span>`;
+  wrapper.appendChild(title);
+
+  const verdict = document.createElement("p");
+  verdict.style.fontSize = "13px";
+  verdict.style.marginBottom = "12px";
+  verdict.textContent = comp.executive_verdict;
+  wrapper.appendChild(verdict);
+
+  const table = document.createElement("table");
+  table.className = "m3-breakdown-table";
+  table.id = "comparison-matrix-table";
+
+  const headerCells = comp.compared_policies
+    .map(
+      (p) =>
+        `<th>${escapeHtml(p.policy_name)}<br/><span style="font-weight:400;font-size:10px;">${escapeHtml(p.uin)}</span></th>`,
+    )
+    .join("");
+
+  const bodyRows = comp.comparison_rows
+    .map((row) => {
+      const cellsHtml = row.cells
+        .map((c) => {
+          const badge = c.is_best_in_class
+            ? `<span class="m3-badge m3-badge-verified" style="font-size:10px;padding:1px 6px;margin-left:4px;">★ Best</span>`
+            : "";
+          const citText = c.citation
+            ? `<div style="font-size:10px;color:var(--md-sys-color-on-surface-variant);">[Page ${c.citation.page_number}]</div>`
+            : "";
+          return `<td><strong>${escapeHtml(c.display_value)}</strong>${badge}${citText}</td>`;
+        })
+        .join("");
+      return `<tr><td><strong>${escapeHtml(row.parameter_label)}</strong><div style="font-size:10px;color:var(--md-sys-color-on-surface-variant);">${escapeHtml(row.category)}</div></td>${cellsHtml}</tr>`;
+    })
+    .join("");
+
+  table.innerHTML = `
+    <thead>
+      <tr>
+        <th>Feature / IRDAI Parameter</th>
+        ${headerCells}
+      </tr>
+    </thead>
+    <tbody>
+      ${bodyRows}
+    </tbody>
+  `;
+  wrapper.appendChild(table);
+  return wrapper;
+}
+
+export function renderClaimSimulation(sim: ClaimSimulationResponse): HTMLElement {
+  const container = document.createElement("div");
+  container.className = "m3-card";
+  container.id = "claim-simulation-card";
+
+  const title = document.createElement("div");
+  title.className = "m3-card-title";
+  title.innerHTML = `<span>🏥 Out-of-Pocket Hospital Bill Simulator: ${escapeHtml(sim.scenario_title)}</span><span class="m3-badge m3-badge-primary">Bill: ₹${sim.hospital_bill_inr.toLocaleString("en-IN")}</span>`;
+  container.appendChild(title);
+
+  const table = document.createElement("table");
+  table.className = "m3-breakdown-table";
+
+  const rowsHtml = sim.results
+    .map(
+      (r) => `
+      <tr>
+        <td><strong>${escapeHtml(r.policy_name)}</strong></td>
+        <td style="color: var(--md-sys-color-verified-text); font-weight: 600;">₹${r.insurer_payable_inr.toLocaleString("en-IN")}</td>
+        <td style="color: ${r.out_of_pocket_inr > 0 ? "var(--md-sys-color-error-text)" : "var(--md-sys-color-verified-text)"}; font-weight: 600;">
+          ₹${r.out_of_pocket_inr.toLocaleString("en-IN")}
+        </td>
+        <td style="font-size: 12px;">${escapeHtml(r.explanation)}</td>
+      </tr>
+    `,
+    )
+    .join("");
+
+  table.innerHTML = `
+    <thead>
+      <tr>
+        <th>Policy</th>
+        <th>Insurer Pays (₹)</th>
+        <th>You Pay Out-of-Pocket (₹)</th>
+        <th>Actuarial Deduction Breakdown</th>
+      </tr>
+    </thead>
+    <tbody>
+      ${rowsHtml}
+    </tbody>
+  `;
+
+  container.appendChild(table);
+  return container;
+}
+
+export function renderAdvisorRecommendation(
+  rec: AdvisorRecommendationResponse,
+  onSelectProbeOption?: (slotName: string, optionText: string) => void,
+): HTMLElement {
+  const root = document.createElement("div");
+  root.id = "advisor-recommendation-view";
+  root.style.display = "flex";
+  root.style.flexDirection = "column";
+  root.style.gap = "14px";
+
+  // 1. Advisory Executive Summary Card
+  const summaryCard = document.createElement("div");
+  summaryCard.className = "m3-card";
+  summaryCard.innerHTML = `
+    <div class="m3-card-title">
+      <span>🎯 Personalized Underwriting & Advisory Verdict</span>
+      <span class="m3-badge m3-badge-verified">Profile Completeness: ${rec.profile_completeness_pct.toFixed(0)}%</span>
+    </div>
+    <p style="font-size: 14px; font-weight: 500; margin-bottom: 8px;">${escapeHtml(rec.advisory_summary)}</p>
+    <div class="m3-pills-row">
+      <span class="m3-pill">Age: ${rec.extracted_profile.primary_age} yrs</span>
+      <span class="m3-pill">Family Size: ${rec.extracted_profile.family_size}</span>
+      <span class="m3-pill">Smoker: ${rec.extracted_profile.smoker ? "Yes" : "No"}</span>
+      <span class="m3-pill">Drinker: ${rec.extracted_profile.drinker ? "Yes" : "No"}</span>
+      <span class="m3-pill">Target Cover: ₹${rec.extracted_profile.target_sum_insured_inr.toLocaleString("en-IN")}</span>
+    </div>
+  `;
+  root.appendChild(summaryCard);
+
+  // 2. Portfolio Split Alert (if applicable)
+  if (rec.portfolio_split_analysis) {
+    root.appendChild(renderPortfolioSplitBanner(rec.portfolio_split_analysis));
+  }
+
+  // 3. Interactive Probing Questions (if any slots missing or follow-ups available)
+  if (rec.probing_questions.length > 0) {
+    root.appendChild(renderProbingQuestions(rec.probing_questions, onSelectProbeOption));
+  }
+
+  // 4. Ranked Policy Recommendations with GST-inclusive Premiums
+  root.appendChild(renderRecommendationCards(rec.recommendations));
+
+  // 5. Side-by-Side Comparison Matrix
+  root.appendChild(renderComparisonMatrix(rec.comparison_matrix));
+
+  // 6. Out-of-Pocket Claim Simulation
+  root.appendChild(renderClaimSimulation(rec.comparison_matrix.claim_simulation));
+
+  return root;
 }
 
 function escapeHtml(text: string): string {

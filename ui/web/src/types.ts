@@ -70,6 +70,170 @@ export interface PrecedenceCheckResult {
   note: string;
 }
 
+export interface ApplicantProfile {
+  primary_age: number;
+  eldest_member_age: number;
+  family_size: number;
+  includes_parents: boolean | null;
+  parents_eldest_age: number | null;
+  smoker: boolean;
+  drinker: boolean;
+  has_pre_existing_diseases: boolean | null;
+  pre_existing_conditions: string[];
+  maternity_needed: boolean | null;
+  city_tier: "TIER_1_METRO" | "TIER_2" | "TIER_3" | null;
+  target_sum_insured_inr: number;
+  budget_priority: "LOWEST_PREMIUM" | "BALANCED" | "MAXIMUM_COVERAGE" | null;
+}
+
+export interface PolicyFeatureCitation {
+  doc_id: string;
+  policy_name: string;
+  section_title: string;
+  clause_code: string | null;
+  page_number: number;
+  verbatim_quote: string;
+}
+
+export interface PolicyFeatureCard {
+  doc_id: string;
+  policy_name: string;
+  insurer_name: string;
+  uin: string;
+  product_type: "HEALTH_INDIVIDUAL_FLOATER" | "PERSONAL_ACCIDENT";
+  positioning_tier: "ULTRA_COMPREHENSIVE" | "PREMIUM_METRO" | "BALANCED_FAMILY" | "VALUE_STANDARD";
+  eligible_sum_insured_options_inr: number[];
+  default_sum_insured_inr: number;
+  room_rent_limit: string;
+  room_rent_capped: boolean;
+  room_rent_max_pct_per_day: number | null;
+  room_rent_max_inr_per_day: number | null;
+  cataract_limit: string;
+  cataract_max_per_eye_inr: number | null;
+  ped_waiting_months: number;
+  specific_disease_waiting_months: number;
+  initial_waiting_days: number;
+  mandatory_copay_pct: number;
+  restoration_benefit: string;
+  no_claim_bonus: string;
+  consumables_covered: boolean;
+  maternity_covered: boolean;
+  ayush_coverage: string;
+  day_care_procedures: string;
+  modern_treatments_coverage: string;
+  key_highlights: string[];
+  watch_outs: string[];
+  feature_citations: Record<string, PolicyFeatureCitation>;
+}
+
+export interface PremiumBreakdown {
+  doc_id: string;
+  policy_name: string;
+  sum_insured_inr: number;
+  eldest_age_used: number;
+  family_size_used: number;
+  base_annual_premium_inr: number;
+  family_floater_load_inr: number;
+  healthy_lifestyle_discount_inr: number;
+  subtotal_before_gst_inr: number;
+  gst_18_pct_inr: number;
+  total_annual_premium_inr: number;
+  monthly_emi_inr: number;
+  pricing_notes: string[];
+}
+
+export interface PortfolioSplitOption {
+  recommended: boolean;
+  headline: string;
+  rationale: string;
+  single_floater_doc_id: string;
+  single_floater_annual_inr: number;
+  young_family_doc_id: string;
+  young_family_policy_name: string;
+  young_family_annual_inr: number;
+  parents_doc_id: string;
+  parents_policy_name: string;
+  parents_annual_inr: number;
+  combined_split_annual_inr: number;
+  annual_savings_inr: number;
+}
+
+export interface ProbingQuestion {
+  question_id: string;
+  slot_name: string;
+  question_text: string;
+  why_it_matters: string;
+  options: string[];
+}
+
+export interface RankedPolicyRecommendation {
+  rank: number;
+  match_score_pct: number;
+  badge_label: string;
+  policy: PolicyFeatureCard;
+  premium: PremiumBreakdown;
+  why_this_fits: string[];
+  trade_offs: string[];
+}
+
+export interface ComparisonCell {
+  doc_id: string;
+  policy_name: string;
+  display_value: string;
+  is_best_in_class: boolean;
+  sentiment: "POSITIVE" | "NEUTRAL" | "WARNING";
+  citation: PolicyFeatureCitation | null;
+}
+
+export interface ComparisonRow {
+  parameter_key: string;
+  parameter_label: string;
+  category: string;
+  cells: ComparisonCell[];
+}
+
+export interface ClaimSimulationItem {
+  doc_id: string;
+  policy_name: string;
+  hospital_bill_inr: number;
+  room_rent_deduction_inr: number;
+  sub_limit_deduction_inr: number;
+  consumables_deduction_inr: number;
+  copay_deduction_inr: number;
+  insurer_payable_inr: number;
+  out_of_pocket_inr: number;
+  explanation: string;
+}
+
+export interface ClaimSimulationResponse {
+  scenario_title: string;
+  hospital_bill_inr: number;
+  room_rent_per_day_inr: number;
+  stay_days: number;
+  is_cataract: boolean;
+  results: ClaimSimulationItem[];
+}
+
+export interface PolicyComparisonResponse {
+  compared_policies: PolicyFeatureCard[];
+  premiums: Record<string, PremiumBreakdown>;
+  comparison_rows: ComparisonRow[];
+  claim_simulation: ClaimSimulationResponse;
+  executive_verdict: string;
+}
+
+export interface AdvisorRecommendationResponse {
+  extracted_profile: ApplicantProfile;
+  profile_completeness_pct: number;
+  needs_more_info: boolean;
+  probing_questions: ProbingQuestion[];
+  portfolio_split_analysis: PortfolioSplitOption | null;
+  recommendations: RankedPolicyRecommendation[];
+  comparison_matrix: PolicyComparisonResponse;
+  advisory_summary: string;
+  irdai_disclaimer: string;
+}
+
 export interface GroundedQueryResponse {
   query_id: string;
   answer: string;
@@ -87,6 +251,7 @@ export interface GroundedQueryResponse {
   model_used: string;
   trace_spans: TraceSpan[];
   cost_telemetry: CostTelemetry;
+  advisor_recommendation?: AdvisorRecommendationResponse | null;
 }
 
 export interface IndexedPolicy {

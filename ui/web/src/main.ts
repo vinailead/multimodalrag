@@ -3,15 +3,20 @@
  */
 
 import {
+  fetchAdvisorRecommendation,
   fetchBenchmarkScorecard,
   fetchFinOps,
   fetchHealth,
   fetchMcpTools,
   fetchPolicies,
+  fetchPolicyComparison,
   submitQuery,
 } from "./api.ts";
 import {
+  renderAdvisorRecommendation,
   renderCitationChips,
+  renderClaimSimulation,
+  renderComparisonMatrix,
   renderConfidenceBadge,
   renderFinOpsPanel,
   renderInspector,
@@ -21,7 +26,11 @@ import {
   renderScorecardPanel,
   renderTraceWaterfall,
 } from "./components.ts";
-import type { GroundedCitation, GroundedQueryResponse } from "./types.ts";
+import type {
+  AdvisorRecommendationResponse,
+  GroundedCitation,
+  GroundedQueryResponse,
+} from "./types.ts";
 
 export async function initApp(): Promise<void> {
   const policySelect = document.getElementById("policy-select") as HTMLSelectElement | null;
@@ -30,7 +39,11 @@ export async function initApp(): Promise<void> {
   const mcpContainer = document.getElementById("mcp-container");
   const queryInput = document.getElementById("query-input") as HTMLInputElement | null;
   const submitBtn = document.getElementById("query-submit-btn") as HTMLButtonElement | null;
-  const samplePills = document.querySelectorAll(".m3-pill");
+  const samplePills = document.querySelectorAll(".m3-pill[data-query]");
+
+  const tabQa = document.getElementById("tab-qa");
+  const tabAdvisor = document.getElementById("tab-advisor");
+  const tabCompare = document.getElementById("tab-compare");
 
   const piiBanner = document.getElementById("pii-banner");
   const piiDetails = document.getElementById("pii-details");
@@ -44,8 +57,12 @@ export async function initApp(): Promise<void> {
   const confidenceSlot = document.getElementById("confidence-slot");
   const breakdownSlot = document.getElementById("breakdown-slot");
   const citationsSlot = document.getElementById("citations-slot");
+  const advisorResultsSlot = document.getElementById("advisor-results-slot");
+  const comparisonResultsSlot = document.getElementById("comparison-results-slot");
   const waterfallSlot = document.getElementById("waterfall-slot");
   const inspectorContent = document.getElementById("inspector-content");
+
+  const activeProbingAnswers: Record<string, string> = {};
 
   // 1. Initial Data Fetch
   try {
@@ -103,6 +120,29 @@ export async function initApp(): Promise<void> {
     // Ignore
   }
 
+  // Helper to render Advisor Recommendation & wire Probing Option clicks
+  const mountAdvisorRecommendation = (
+    rec: AdvisorRecommendationResponse,
+    baseQuery: string,
+  ): void => {
+    if (!advisorResultsSlot) return;
+    advisorResultsSlot.innerHTML = "";
+    advisorResultsSlot.classList.remove("hidden");
+
+    const onSelectProbeOption = (slotName: string, optionText: string): void => {
+      activeProbingAnswers[slotName] = optionText;
+      void fetchAdvisorRecommendation(baseQuery, undefined, activeProbingAnswers)
+        .then((updatedRec) => {
+          mountAdvisorRecommendation(updatedRec, baseQuery);
+        })
+        .catch(() => {
+          // Ignore error in stub mode
+        });
+    };
+
+    advisorResultsSlot.appendChild(renderAdvisorRecommendation(rec, onSelectProbeOption));
+  };
+
   // 2. Wire Sample Query Pills
   samplePills.forEach((pill) => {
     pill.addEventListener("click", () => {
@@ -114,7 +154,58 @@ export async function initApp(): Promise<void> {
     });
   });
 
-  // 3. Query Submission Handler
+  // 3. Wire 3-Mode Product Navigation Tabs
+  const setActiveTab = (activeBtn: HTMLElement | null): void => {
+    [tabQa, tabAdvisor, tabCompare].forEach((btn) => {
+      if (!btn) return;
+      if (btn === activeBtn) {
+        btn.className = "m3-btn-primary";
+      } else {
+        btn.className = "m3-pill";
+      }
+    });
+  };
+
+  tabQa?.addEventListener("click", () => {
+    setActiveTab(tabQa);
+    comparisonResultsSlot?.classList.add("hidden");
+  });
+
+  tabAdvisor?.addEventListener("click", () => {
+    setActiveTab(tabAdvisor);
+    comparisonResultsSlot?.classList.add("hidden");
+    const defaultAdvisorQuery =
+      queryInput?.value.trim() ||
+      "I am individual with age 26, non smoker and non drinker with family of 5 what is the best policy for me";
+    if (queryInput && !queryInput.value.trim()) {
+      queryInput.value = defaultAdvisorQuery;
+    }
+    void fetchAdvisorRecommendation(defaultAdvisorQuery, undefined, activeProbingAnswers)
+      .then((rec) => {
+        mountAdvisorRecommendation(rec, defaultAdvisorQuery);
+      })
+      .catch(() => {
+        // Ignore
+      });
+  });
+
+  tabCompare?.addEventListener("click", () => {
+    setActiveTab(tabCompare);
+    void fetchPolicyComparison()
+      .then((comp) => {
+        if (comparisonResultsSlot) {
+          comparisonResultsSlot.innerHTML = "";
+          comparisonResultsSlot.classList.remove("hidden");
+          comparisonResultsSlot.appendChild(renderComparisonMatrix(comp));
+          comparisonResultsSlot.appendChild(renderClaimSimulation(comp.claim_simulation));
+        }
+      })
+      .catch(() => {
+        // Ignore
+      });
+  });
+
+  // 4. Query Submission Handler
   const handleQuery = async (): Promise<void> => {
     const query = queryInput?.value.trim();
     if (!query) return;
@@ -195,6 +286,13 @@ export async function initApp(): Promise<void> {
           inspectorContent.innerHTML = "";
           inspectorContent.appendChild(renderInspector(resp.citations[0]));
         }
+      }
+
+      // Handle AI Policy Advisor Recommendation if present on response
+      if (resp.advisor_recommendation) {
+        mountAdvisorRecommendation(resp.advisor_recommendation, query);
+      } else if (advisorResultsSlot) {
+        advisorResultsSlot.classList.add("hidden");
       }
 
       // Handle OpenTelemetry Execution Waterfall

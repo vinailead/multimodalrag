@@ -1,11 +1,14 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
   executeMcpTool,
+  fetchAdvisorRecommendation,
   fetchBenchmarkScorecard,
+  fetchClaimSimulation,
   fetchFinOps,
   fetchHealth,
   fetchMcpTools,
   fetchPolicies,
+  fetchPolicyComparison,
   submitQuery,
 } from "../api.ts";
 
@@ -229,5 +232,135 @@ describe("API Client", () => {
       statusText: "Internal Error",
     } as Response);
     await expect(executeMcpTool("fail", {})).rejects.toThrow("Failed to execute MCP tool");
+  });
+
+  it("fetchAdvisorRecommendation posts query and returns AdvisorRecommendationResponse", async () => {
+    const mockAdvisor = {
+      extracted_profile: {
+        primary_age: 26,
+        eldest_member_age: 26,
+        family_size: 5,
+        includes_parents: null,
+        parents_eldest_age: null,
+        smoker: false,
+        drinker: false,
+        has_pre_existing_diseases: null,
+        pre_existing_conditions: [],
+        maternity_needed: null,
+        city_tier: null,
+        target_sum_insured_inr: 1000000,
+        budget_priority: null,
+      },
+      profile_completeness_pct: 50,
+      needs_more_info: true,
+      probing_questions: [],
+      portfolio_split_analysis: null,
+      recommendations: [],
+      comparison_matrix: {
+        compared_policies: [],
+        premiums: {},
+        comparison_rows: [],
+        claim_simulation: {
+          scenario_title: "Test",
+          hospital_bill_inr: 250000,
+          room_rent_per_day_inr: 9000,
+          stay_days: 4,
+          is_cataract: false,
+          results: [],
+        },
+        executive_verdict: "Verdict",
+      },
+      advisory_summary: "Summary",
+      irdai_disclaimer: "Disclaimer",
+    };
+
+    vi.spyOn(globalThis, "fetch").mockResolvedValueOnce({
+      ok: true,
+      json: async () => mockAdvisor,
+    } as Response);
+
+    const res = await fetchAdvisorRecommendation(
+      "26yo non smoker family of 5",
+      { primary_age: 26 },
+      { includes_parents: "No — Spouse & Kids only (all under 35)" },
+    );
+    expect(res.extracted_profile.primary_age).toBe(26);
+    expect(res.extracted_profile.family_size).toBe(5);
+
+    vi.spyOn(globalThis, "fetch").mockResolvedValueOnce({
+      ok: false,
+      statusText: "Bad Request",
+    } as Response);
+    await expect(fetchAdvisorRecommendation("fail")).rejects.toThrow(
+      "Failed to fetch advisor recommendation",
+    );
+  });
+
+  it("fetchPolicyComparison posts doc_ids and profile and returns PolicyComparisonResponse", async () => {
+    const mockComp = {
+      compared_policies: [],
+      premiums: {},
+      comparison_rows: [],
+      claim_simulation: {
+        scenario_title: "Test",
+        hospital_bill_inr: 250000,
+        room_rent_per_day_inr: 9000,
+        stay_days: 4,
+        is_cataract: false,
+        results: [],
+      },
+      executive_verdict: "Comparison Verdict",
+    };
+
+    vi.spyOn(globalThis, "fetch").mockResolvedValueOnce({
+      ok: true,
+      json: async () => mockComp,
+    } as Response);
+
+    const res = await fetchPolicyComparison(["hdfc_ergo_optima_secure"], { primary_age: 26 });
+    expect(res.executive_verdict).toBe("Comparison Verdict");
+
+    vi.spyOn(globalThis, "fetch").mockResolvedValueOnce({
+      ok: false,
+      statusText: "Server Error",
+    } as Response);
+    await expect(fetchPolicyComparison()).rejects.toThrow("Failed to fetch policy comparison");
+  });
+
+  it("fetchClaimSimulation posts hospital scenario and returns ClaimSimulationResponse", async () => {
+    const mockSim = {
+      scenario_title: "Cardiac",
+      hospital_bill_inr: 250000,
+      room_rent_per_day_inr: 9000,
+      stay_days: 4,
+      is_cataract: false,
+      results: [],
+    };
+
+    vi.spyOn(globalThis, "fetch").mockResolvedValueOnce({
+      ok: true,
+      json: async () => mockSim,
+    } as Response);
+
+    const res = await fetchClaimSimulation({
+      hospital_bill_inr: 250000,
+      room_rent_per_day_inr: 9000,
+      stay_days: 4,
+      is_cataract: false,
+    });
+    expect(res.hospital_bill_inr).toBe(250000);
+
+    vi.spyOn(globalThis, "fetch").mockResolvedValueOnce({
+      ok: false,
+      statusText: "Error",
+    } as Response);
+    await expect(
+      fetchClaimSimulation({
+        hospital_bill_inr: 100000,
+        room_rent_per_day_inr: 5000,
+        stay_days: 2,
+        is_cataract: true,
+      }),
+    ).rejects.toThrow("Failed to simulate claim");
   });
 });

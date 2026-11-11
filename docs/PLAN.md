@@ -215,8 +215,8 @@ Redesign the Google Material Design 3 TypeScript Web Application (`ui/web/`) int
 - Updated Vitest unit test suite in `ui/web/src/__tests__/ui.test.ts` and `ui/web/src/__tests__/api.test.ts`
 
 ### Success Criteria (Self-Verifiable Checkboxes)
-- [ ] **TypeScript Quality Gate**: `npx eslint ui/web/src e2e`, `npx prettier --check "ui/web/src/**/*.{ts,css}" "e2e/**/*.ts"`, and `npx tsc --noEmit` exit with code `0`.
-- [ ] **TypeScript Unit Tests**: `npx vitest run --coverage` passes 100% with $\ge 85\%$ line coverage across `api.ts` and `components.ts`, testing the AI Advisor probing cards, Premium & Portfolio Split cards, Side-by-Side Comparison Matrix, and Claim Simulator.
+- [x] **TypeScript Quality Gate**: `npx eslint ui/web/src e2e`, `npx prettier --check "ui/web/src/**/*.{ts,css}" "e2e/**/*.ts"`, and `npx tsc --noEmit` exit with code `0`.
+- [x] **TypeScript Unit Tests**: `npx vitest run --coverage` passes 100% with $\ge 85\%$ line coverage across `api.ts` and `components.ts`, testing the AI Advisor probing cards, Premium & Portfolio Split cards, Side-by-Side Comparison Matrix, and Claim Simulator.
 
 ---
 

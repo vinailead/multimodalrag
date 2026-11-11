@@ -1,16 +1,23 @@
 import { describe, expect, it, vi } from "vitest";
 import {
+  renderAdvisorRecommendation,
   renderCitationChips,
+  renderClaimSimulation,
+  renderComparisonMatrix,
   renderConfidenceBadge,
   renderFinOpsPanel,
   renderInspector,
   renderIntentChips,
   renderMcpToolsPanel,
   renderPolicyBreakdown,
+  renderPortfolioSplitBanner,
+  renderProbingQuestions,
+  renderRecommendationCards,
   renderScorecardPanel,
   renderTraceWaterfall,
 } from "../components.ts";
 import type {
+  AdvisorRecommendationResponse,
   FinOpsSummary,
   GroundedCitation,
   McpToolDefinition,
@@ -253,6 +260,244 @@ describe("Material Design 3 Components", () => {
       expect(img?.getAttribute("src")).toBe("/api/v1/crops/test_table.png");
       expect(el.textContent).toContain("Cataract per eye up to ₹40,000.");
       expect(el.textContent).toContain("Full Parent Section Context Text Here");
+    });
+  });
+
+  describe("Advisor, Comparison & Claim Simulator Components", () => {
+    it("renders probing questions and invokes callback when option clicked", () => {
+      const cb = vi.fn();
+      const el = renderProbingQuestions(
+        [
+          {
+            question_id: "probe_parents",
+            slot_name: "includes_parents",
+            question_text: "Does your family of 5 include parents?",
+            why_it_matters: "Family floater rates depend on eldest member age.",
+            options: ["Yes — Parents aged 50–60", "No — Spouse & Kids only"],
+          },
+        ],
+        cb,
+      );
+      expect(el.textContent).toContain("Does your family of 5 include parents?");
+      const btn = el.querySelector('[data-testid="probe-probe_parents-0"]') as HTMLButtonElement;
+      expect(btn).not.toBeNull();
+      btn.click();
+      expect(cb).toHaveBeenCalledWith("includes_parents", "Yes — Parents aged 50–60");
+    });
+
+    it("renders portfolio split banner with savings", () => {
+      const el = renderPortfolioSplitBanner({
+        recommended: true,
+        headline: "Smart Portfolio Split Recommended",
+        rationale: "Splitting saves money.",
+        single_floater_doc_id: "hdfc_ergo_optima_secure",
+        single_floater_annual_inr: 46000,
+        young_family_doc_id: "hdfc_ergo_optima_secure",
+        young_family_policy_name: "HDFC ERGO Optima Secure",
+        young_family_annual_inr: 15000,
+        parents_doc_id: "bajaj_allianz_health_guard",
+        parents_policy_name: "Bajaj Allianz Health Guard",
+        parents_annual_inr: 24000,
+        combined_split_annual_inr: 39000,
+        annual_savings_inr: 7000,
+      });
+      expect(el.textContent).toContain("Smart Portfolio Split Recommended");
+      expect(el.textContent).toContain("7,000");
+    });
+
+    it("renders full advisor recommendation view including cards, matrix, and claim simulator", () => {
+      const mockRec: AdvisorRecommendationResponse = {
+        extracted_profile: {
+          primary_age: 26,
+          eldest_member_age: 26,
+          family_size: 5,
+          includes_parents: true,
+          parents_eldest_age: 56,
+          smoker: false,
+          drinker: false,
+          has_pre_existing_diseases: false,
+          pre_existing_conditions: [],
+          maternity_needed: false,
+          city_tier: "TIER_1_METRO",
+          target_sum_insured_inr: 1000000,
+          budget_priority: "BALANCED",
+        },
+        profile_completeness_pct: 100,
+        needs_more_info: false,
+        probing_questions: [
+          {
+            question_id: "probe_parents",
+            slot_name: "includes_parents",
+            question_text: "Parents included?",
+            why_it_matters: "Age band",
+            options: ["Yes"],
+          },
+        ],
+        portfolio_split_analysis: {
+          recommended: true,
+          headline: "Split Recommended",
+          rationale: "Saves premium",
+          single_floater_doc_id: "hdfc_ergo_optima_secure",
+          single_floater_annual_inr: 45000,
+          young_family_doc_id: "hdfc_ergo_optima_secure",
+          young_family_policy_name: "HDFC ERGO Optima Secure",
+          young_family_annual_inr: 14000,
+          parents_doc_id: "bajaj_allianz_health_guard",
+          parents_policy_name: "Bajaj Allianz Health Guard",
+          parents_annual_inr: 22000,
+          combined_split_annual_inr: 36000,
+          annual_savings_inr: 9000,
+        },
+        recommendations: [
+          {
+            rank: 1,
+            match_score_pct: 96.5,
+            badge_label: "Best Overall Fit",
+            policy: {
+              doc_id: "hdfc_ergo_optima_secure",
+              policy_name: "HDFC ERGO Optima Secure",
+              insurer_name: "HDFC ERGO",
+              uin: "HDFHLIP25041V062425",
+              product_type: "HEALTH_INDIVIDUAL_FLOATER",
+              positioning_tier: "ULTRA_COMPREHENSIVE",
+              eligible_sum_insured_options_inr: [1000000],
+              default_sum_insured_inr: 1000000,
+              room_rent_limit: "No Cap (Any Room)",
+              room_rent_capped: false,
+              room_rent_max_pct_per_day: null,
+              room_rent_max_inr_per_day: null,
+              cataract_limit: "Up to 100% SI",
+              cataract_max_per_eye_inr: null,
+              ped_waiting_months: 36,
+              specific_disease_waiting_months: 24,
+              initial_waiting_days: 30,
+              mandatory_copay_pct: 0,
+              restoration_benefit: "100% Restore",
+              no_claim_bonus: "50% per yr",
+              consumables_covered: true,
+              maternity_covered: false,
+              ayush_coverage: "100% SI",
+              day_care_procedures: "All",
+              modern_treatments_coverage: "100% SI",
+              key_highlights: ["4X Cover"],
+              watch_outs: ["No maternity"],
+              feature_citations: {},
+            },
+            premium: {
+              doc_id: "hdfc_ergo_optima_secure",
+              policy_name: "HDFC ERGO Optima Secure",
+              sum_insured_inr: 1000000,
+              eldest_age_used: 26,
+              family_size_used: 5,
+              base_annual_premium_inr: 9800,
+              family_floater_load_inr: 6664,
+              healthy_lifestyle_discount_inr: 1235,
+              subtotal_before_gst_inr: 15229,
+              gst_18_pct_inr: 2741,
+              total_annual_premium_inr: 17970,
+              monthly_emi_inr: 1542,
+              pricing_notes: ["7.5% discount"],
+            },
+            why_this_fits: ["Zero room rent cap"],
+            trade_offs: ["No maternity"],
+          },
+        ],
+        comparison_matrix: {
+          compared_policies: [
+            {
+              doc_id: "hdfc_ergo_optima_secure",
+              policy_name: "HDFC ERGO Optima Secure",
+              insurer_name: "HDFC ERGO",
+              uin: "HDFHLIP25041V062425",
+              product_type: "HEALTH_INDIVIDUAL_FLOATER",
+              positioning_tier: "ULTRA_COMPREHENSIVE",
+              eligible_sum_insured_options_inr: [1000000],
+              default_sum_insured_inr: 1000000,
+              room_rent_limit: "No Cap",
+              room_rent_capped: false,
+              room_rent_max_pct_per_day: null,
+              room_rent_max_inr_per_day: null,
+              cataract_limit: "No Cap",
+              cataract_max_per_eye_inr: null,
+              ped_waiting_months: 36,
+              specific_disease_waiting_months: 24,
+              initial_waiting_days: 30,
+              mandatory_copay_pct: 0,
+              restoration_benefit: "100%",
+              no_claim_bonus: "50%",
+              consumables_covered: true,
+              maternity_covered: false,
+              ayush_coverage: "100%",
+              day_care_procedures: "All",
+              modern_treatments_coverage: "100%",
+              key_highlights: [],
+              watch_outs: [],
+              feature_citations: {},
+            },
+          ],
+          premiums: {},
+          comparison_rows: [
+            {
+              parameter_key: "room_rent_limit",
+              parameter_label: "Daily Room Rent & ICU Cap",
+              category: "Hospitalization Limits",
+              cells: [
+                {
+                  doc_id: "hdfc_ergo_optima_secure",
+                  policy_name: "HDFC ERGO Optima Secure",
+                  display_value: "No Cap (Any Room)",
+                  is_best_in_class: true,
+                  sentiment: "POSITIVE",
+                  citation: {
+                    doc_id: "hdfc_ergo_optima_secure",
+                    policy_name: "HDFC ERGO Optima Secure",
+                    section_title: "Schedule of Benefits",
+                    clause_code: null,
+                    page_number: 2,
+                    verbatim_quote: "No cap on room rent.",
+                  },
+                },
+              ],
+            },
+          ],
+          claim_simulation: {
+            scenario_title: "₹2,50,000 Hospitalization",
+            hospital_bill_inr: 250000,
+            room_rent_per_day_inr: 9000,
+            stay_days: 4,
+            is_cataract: false,
+            results: [
+              {
+                doc_id: "hdfc_ergo_optima_secure",
+                policy_name: "HDFC ERGO Optima Secure",
+                hospital_bill_inr: 250000,
+                room_rent_deduction_inr: 0,
+                sub_limit_deduction_inr: 0,
+                consumables_deduction_inr: 0,
+                copay_deduction_inr: 0,
+                insurer_payable_inr: 250000,
+                out_of_pocket_inr: 0,
+                explanation: "Zero out-of-pocket.",
+              },
+            ],
+          },
+          executive_verdict: "HDFC ERGO wins.",
+        },
+        advisory_summary: "HDFC ERGO Optima Secure is #1.",
+        irdai_disclaimer: "Indicative rates.",
+      };
+
+      const el = renderAdvisorRecommendation(mockRec);
+      expect(el.textContent).toContain("HDFC ERGO Optima Secure");
+      expect(el.textContent).toContain("17,970");
+      expect(el.textContent).toContain("Zero out-of-pocket.");
+      expect(el.querySelector("#comparison-matrix-table")).not.toBeNull();
+      expect(el.querySelector("#claim-simulation-card")).not.toBeNull();
+      expect(renderRecommendationCards(mockRec.recommendations).textContent).toContain("96.5%");
+      expect(renderComparisonMatrix(mockRec.comparison_matrix).textContent).toContain("★ Best");
+      expect(
+        renderClaimSimulation(mockRec.comparison_matrix.claim_simulation).textContent,
+      ).toContain("2,50,000");
     });
   });
 });

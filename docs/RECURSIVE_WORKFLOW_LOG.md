@@ -127,11 +127,12 @@ This file implements the **Recursive Workflow Planning** memory loop. Every time
   1. Added `POST /api/v1/advisor/recommend`, `POST /api/v1/policies/compare`, and `POST /api/v1/policies/simulate-claim` to `src/insurance_mmrag/api/main.py`.
   2. Added `recommend_best_insurance_policy` and `compare_insurance_policies` MCP tools in `src/insurance_mmrag/mcp_tools.py` and `recommend`/`compare` subcommands in `src/insurance_mmrag/cli.py`.
 
+---
 
-
-
-  2. Tightened `PiiRedactor` Aadhaar regex lookbehind to `(?<![a-zA-Z\d\\+])`, ensuring escapes and variable identifiers are never falsely matched as Aadhaar numbers.
-  3. Configured `table_vision_parser.py` to use `ensure_ascii=False` and added resilient escape-sequence recovery in `stub_gemini.py` `_parse_rows`.
-  4. Updated `api/main.py` and `ui/streamlit_app.py` with dynamic manifest discovery and on-demand policy ingestion.
-  5. Updated `e2e/mmrag.spec.ts` to assert flexible multi-policy dropdown options ($\ge 2$).
-  6. Verified all 10 ADLC quality gates (`npm run check`) 100% green with 94.77% Python test coverage, 99.62% TypeScript test coverage, and 6/6 passing Playwright E2E tests.
+## Log Entry #015 — V2 Phase 5: Consumer-Grade Material Design 3 Web App (`ui/web/`)
+- **Timestamp**: `2026-11-11T21:55:00+05:30`
+- **Observation**:
+  1. Selecting `.m3-pill` globally in `main.ts` would match both Sample Query pills and Probing Option buttons unless scoped with `.m3-pill[data-query]`. Scoping sample query pill listeners to `.m3-pill[data-query]` prevents collision with `.m3-probe-option` pills and Product Mode navigation tabs.
+- **Recursive Action Taken**:
+  1. Updated `ui/web/index.html`, `ui/web/src/types.ts`, `ui/web/src/api.ts`, `ui/web/src/components.ts`, and `ui/web/src/main.ts` with 3-Mode Product Navigation (`#tab-qa`, `#tab-advisor`, `#tab-compare`), interactive probing cards (`renderProbingQuestions`), portfolio split banner (`renderPortfolioSplitBanner`), ranked policy cards (`renderRecommendationCards`), side-by-side comparison matrix (`renderComparisonMatrix`), and claim simulator (`renderClaimSimulation`).
+  2. Verified 28/28 Vitest tests pass at 99.43% coverage.
