@@ -76,6 +76,25 @@ This file implements the **Recursive Workflow Planning** memory loop. Every time
   4. Both FastAPI (`/api/v1/policies`, `/api/v1/query`) and Streamlit (`ui/streamlit_app.py`) benefit from a manifest-driven architecture: discovering all downloaded policies from `manifest.json` on startup and performing lazy on-demand indexing upon query arrival keeps unit test suites running in <2 seconds while offering instant access to large multi-policy catalogs in production.
 - **Recursive Action Taken**:
   1. Updated `scripts/fetch_irdai_policies.py` to download, sanitize, and register authentic health policies from HDFC ERGO (Optima Secure), Tata AIG (MediCare Premier), Go Digit (Health Plus), and Bajaj Allianz (Health Guard), updating `data/raw_policies/manifest.json`.
+  2. Fixed `PiiRedactor` regex boundaries and ensured `ensure_ascii=False` across all prompt serialization.
+  3. Upgraded `ui/streamlit_app.py` and `src/insurance_mmrag/api/main.py` with multi-policy selectors and lazy background ingestion.
+  4. Re-verified all 10 quality gates passing 100%.
+
+---
+
+## Log Entry #011 — Retrieval Filter Blindness, Direct Answer Synthesis & Streamlit UX
+- **Timestamp**: `2026-11-11T10:55:00+05:30`
+- **Observation**:
+  1. **Hard Section Filter Blindness**: In `HybridVectorStore`, applying `target_sections` as a hard `must` filter in Qdrant and a hard `continue` in BM25 blinded queries like *"is cataract surgery included or excluded"* when the intent router classified target sections as `[Base_Coverage, Exclusions, Definitions]`. Because cataract clauses are indexed under `Waiting_Periods` (Code-Excl02) and `Schedule_of_Benefits` (per-eye sub-limits), the hard filter blocked all relevant chunks, dropping confidence $< 0.70$ and triggering indeterminate abstention.
+  2. **Generic Policy Text vs Direct Answers**: Previous stub generation echoed raw policy text chunks tagged with `[chk_...]` rather than providing an executive, direct answer to the user's question.
+  3. **Streamlit UX Form Submission**: In `ui/streamlit_app.py`, standalone `st.text_input` and `st.button` required manual button clicking and did not submit on pressing the Enter key. In addition, sample query buttons required double clicks to execute.
+- **Recursive Action Taken**:
+  1. Updated `HybridVectorStore.search` to apply `target_sections` as a soft **Target Section Boost (+0.04)** in Reciprocal Rank Fusion (RRF), preserving strict filtering solely on `doc_id`.
+  2. Enhanced `INTENT_CUES` in `irdai.py` so specific surgical procedures (cataract, hernia, hydrocele, piles, joint replacement) automatically target `WAITING_PERIODS` and `SCHEDULE_OF_BENEFITS` alongside `BASE_COVERAGE`.
+  3. Upgraded `StubGeminiClient` to synthesize direct, natural language answers highlighting exact coverage status (`COVERED`, `COVERED_WITH_LIMITS`, `WAITING_PERIOD_APPLIES`, `EXCLUDED`), specific waiting periods, and monetary sub-limits before citing governing IRDAI clauses.
+  4. Redesigned `ui/streamlit_app.py` with `st.form("insurance_query_form")` so pressing Enter immediately executes the query, added instant sample query execution, and placed a prominent **Direct Answer Card** above collapsible evidence citations and visual crops.
+  5. Cleared stale LLM disk cache in `data/cache/llm` and verified all 10 ADLC quality gates (`npm run check`) passing 100% (65 pytest unit tests at 94.52% coverage, 22 vitest unit tests at 99.62% coverage, and 6/6 Playwright E2E tests).
+
   2. Tightened `PiiRedactor` Aadhaar regex lookbehind to `(?<![a-zA-Z\d\\+])`, ensuring escapes and variable identifiers are never falsely matched as Aadhaar numbers.
   3. Configured `table_vision_parser.py` to use `ensure_ascii=False` and added resilient escape-sequence recovery in `stub_gemini.py` `_parse_rows`.
   4. Updated `api/main.py` and `ui/streamlit_app.py` with dynamic manifest discovery and on-demand policy ingestion.

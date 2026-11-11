@@ -1,4 +1,4 @@
-"""Streamlit Enterprise Showcase Dashboard for Indian Insurance Multimodal RAG."""
+"""Google Material Design 3 Interactive Streamlit Dashboard for Indian Insurance Multimodal RAG."""
 
 from __future__ import annotations
 
@@ -24,11 +24,13 @@ st.set_page_config(
 
 
 @st.cache_resource
-def get_cached_pipeline() -> InsuranceMMRAGPipeline:
+def get_cached_pipeline(
+    api_key: str | None = None, use_stub: bool = True
+) -> InsuranceMMRAGPipeline:
     import json
 
     settings = get_settings()
-    pipe = create_default_pipeline(settings=settings, use_stub=True)
+    pipe = create_default_pipeline(settings=settings, use_stub=use_stub, api_key=api_key)
 
     # Ingest all available provider policies from manifest.json
     manifest_file = settings.raw_policies_dir / "manifest.json"
@@ -59,11 +61,20 @@ def get_cached_pipeline() -> InsuranceMMRAGPipeline:
     return pipe
 
 
-pipeline = get_cached_pipeline()
-
-# --- Sidebar: Policy Selector & Telemetry ---
+# --- Sidebar: Policy Selector, Model Config & Telemetry ---
 st.sidebar.title("🛡️ IRDAI Multimodal RAG")
 st.sidebar.caption("Gemini 2.5 Vision · Structure-Aware · DPDP Compliant")
+
+# Model Mode Selector
+with st.sidebar.expander("⚙️ Model Engine Configuration", expanded=False):
+    live_key = st.text_input(
+        "Gemini API Key (Optional):",
+        type="password",
+        help="Leave blank to use the high-speed deterministic engine with zero external API calls.",
+    )
+
+use_live_model = bool(live_key.strip()) if live_key else False
+pipeline = get_cached_pipeline(api_key=live_key if use_live_model else None, use_stub=not use_live_model)
 
 docs = pipeline.get_indexed_documents()
 policy_options = {doc.doc_id: f"{doc.policy_name} ({doc.uin})" for doc in docs.values()}
@@ -87,7 +98,10 @@ st.sidebar.markdown("---")
 st.sidebar.subheader("⚖️ Governance & Compliance")
 st.sidebar.success("✅ DPDP Act 2023 Masking Active")
 st.sidebar.success("✅ IRDAI Legal Precedence Enforced")
-st.sidebar.info("🔒 Zero External Model Calls in Test Mode")
+if use_live_model:
+    st.sidebar.info("🟢 Live Gemini 2.5 Active")
+else:
+    st.sidebar.info("🔒 Deterministic In-Memory Double Active")
 
 # --- Main Workspace ---
 st.title("Indian Insurance Policy Multimodal RAG")
@@ -96,9 +110,16 @@ st.markdown(
     "Powered by **Gemini 2.5 Vision table extraction**, **Parent-Child chunking**, and **OpenTelemetry waterfall execution tracing**."
 )
 
-# Sample Queries Row
-st.markdown("##### 💡 Sample Inquiries:")
+# State initialization for seamless one-click queries
+if "active_query" not in st.session_state:
+    st.session_state["active_query"] = "is cataract surgery included or excluded"
+if "auto_execute" not in st.session_state:
+    st.session_state["auto_execute"] = False
+
+# Quick Sample Inquiries
+st.markdown("##### 💡 Quick Sample Inquiries (Click to Ask):")
 sample_queries = [
+    "is cataract surgery included or excluded",
     "What is the waiting period for cataract surgery under this policy?",
     "What is the daily room rent sub-limit and mandatory co-payment percentage?",
     "What is the waiting period for Pre-Existing Diseases under Code-Excl01?",
@@ -106,62 +127,88 @@ sample_queries = [
     "My Aadhaar is 1234 5678 9012 and PAN ABCDE1234F. What is the room rent limit?",
 ]
 
-sample_cols = st.columns(len(sample_queries))
-selected_sample = ""
+sample_cols = st.columns(3)
 for idx, q in enumerate(sample_queries):
-    label = q.split("?")[0][:22] + "..."
-    if sample_cols[idx].button(label, key=f"sq_{idx}"):
-        selected_sample = q
+    col_idx = idx % 3
+    if sample_cols[col_idx].button(f"📌 {q}", key=f"sq_{idx}", use_container_width=True):
+        st.session_state["active_query"] = q
+        st.session_state["auto_execute"] = True
+        st.rerun()
 
-user_query = st.text_input(
-    "Enter insurance policy question:",
-    value=selected_sample if selected_sample else "",
-    placeholder="e.g. What is the cataract surgery waiting period?",
+# Form handles pressing Enter in the text input box
+with st.form("insurance_query_form", clear_on_submit=False):
+    col_input, col_submit = st.columns([5, 1])
+    with col_input:
+        user_query_input = st.text_input(
+            "Enter policy inquiry (Press Enter or click Ask Assistant):",
+            value=st.session_state.get("active_query", ""),
+            placeholder="e.g. is cataract surgery included or excluded",
+            label_visibility="collapsed",
+        )
+    with col_submit:
+        submit_clicked = st.form_submit_button(
+            "🔍 Ask", type="primary", use_container_width=True
+        )
+
+# Execute query if submitted via button, Enter key, or quick sample click
+should_run_query = (submit_clicked or st.session_state.get("auto_execute", False)) and bool(
+    user_query_input.strip()
 )
+st.session_state["auto_execute"] = False
 
-if st.button("Submit Query", type="primary") and user_query:
-    with st.spinner("Analyzing policy clauses, schedules, and visual tables..."):
-        resp: GroundedQueryResponse = pipeline.query(user_query, doc_id=selected_doc_id)
+if should_run_query:
+    active_query_text = user_query_input.strip()
+    with st.spinner("Analyzing policy clauses, exclusions, schedules, and visual tables..."):
+        resp: GroundedQueryResponse = pipeline.query(active_query_text, doc_id=selected_doc_id)
 
     # 1. DPDP PII Alert
     if resp.pii_redactions_applied:
         st.warning(
-            f"🛡️ **DPDP Act 2023 Redaction Applied:** Masked {', '.join(resp.pii_redactions_applied)} identifiers."
+            f"🛡️ **DPDP Act 2023 Masking Applied:** Redacted sensitive Indian identifier(s): `{', '.join(resp.pii_redactions_applied)}`."
         )
 
-    # 2. Intent & Escalation
-    intent_col1, intent_col2, intent_col3 = st.columns(3)
-    intent_col1.info(f"**Intent:** `{resp.intent.primary_section}`")
-    intent_col2.info(f"**CRAG Hops:** {resp.crag_hops} Hop(s)")
-    intent_col3.info(f"**Model Tier:** `{resp.model_used}`")
+    # 2. Meta summary pills
+    meta_col1, meta_col2, meta_col3, meta_col4 = st.columns(4)
+    meta_col1.info(f"**Section:** `{resp.intent.primary_section}`")
+    meta_col2.info(f"**Confidence:** `{resp.confidence_score * 100:.1f}%`")
+    meta_col3.info(f"**CRAG Hops:** `{resp.crag_hops} Hop(s)`")
+    meta_col4.info(f"**Model Tier:** `{resp.model_used}`")
 
-    # 3. Legal Precedence Banner
-    st.info(f"⚖️ **IRDAI Legal Precedence:** {resp.precedence_check.rule_applied}")
+    # 3. Direct Answer Card
+    st.markdown("---")
+    st.markdown("### 📋 Policy Determination & Direct Answer")
 
-    # 4. Answer Card & Confidence
-    st.markdown("### Grounded Policy Determination")
-    conf_col, status_col = st.columns([1, 3])
+    status = resp.coverage_summary.coverage_status
+    status_badges = {
+        "COVERED": "🟢 FULLY COVERED",
+        "COVERED_WITH_LIMITS": "🟡 COVERED WITH LIMITS / SUB-LIMITS",
+        "WAITING_PERIOD_APPLIES": "⏳ WAITING PERIOD APPLIES",
+        "EXCLUDED": "🔴 PERMANENTLY EXCLUDED",
+        "INDETERMINATE": "⚪ INDETERMINATE COVERAGE",
+    }
+    badge_label = status_badges.get(status, status)
+
     if resp.abstained or resp.confidence_score < 0.70:
-        conf_col.error(f"Confidence: {resp.confidence_score * 100:.1f}% (Abstained)")
-        st.error(
-            f"⚠️ **IRDAI Indeterminate Abstention:** {resp.abstention_reason or 'Confidence below 0.70 threshold.'}"
+        st.warning(
+            f"⚠️ **IRDAI Indeterminate Abstention (Confidence {resp.confidence_score * 100:.1f}%):**\n\n"
+            f"{resp.abstention_reason or 'The query cannot be verified with >= 70% confidence against the policy clauses.'}"
         )
+        st.markdown(f"> {resp.answer}")
     else:
-        conf_col.success(f"Confidence: {resp.confidence_score * 100:.1f}% (Verified)")
+        # High-visibility Direct Answer Banner
+        st.success(f"**Coverage Status:** {badge_label}\n\n{resp.answer}")
 
-    st.write(resp.answer)
-
-    # 5. Policy Coverage Breakdown
-    st.markdown("#### Structured Policy Coverage Matrix")
+    # 4. Policy Coverage Breakdown Table
+    st.markdown("#### 📊 Key Coverage Breakdown")
     cov_data = {
         "Coverage Dimension": [
-            "Coverage Status",
+            "Coverage Determination",
             "Waiting Period Details",
             "Applicable Sub-Limits",
             "Cost Sharing / Co-Pay",
             "Applicable Exclusions",
         ],
-        "Policy Determination": [
+        "Policy Terms & Conditions": [
             resp.coverage_summary.coverage_status,
             resp.coverage_summary.waiting_period_details,
             resp.coverage_summary.applicable_sub_limits,
@@ -171,21 +218,21 @@ if st.button("Submit Query", type="primary") and user_query:
     }
     st.table(cov_data)
 
-    # 6. Citations & Visual Table Grounding
-    st.markdown("#### Grounded Citations & Visual Inspector")
-    if resp.citations:
-        for idx, cit in enumerate(resp.citations):
-            with st.expander(
-                f"Citation {idx + 1}: [{cit.clause_code or f'Page {cit.page_number}'}] {cit.section_title}"
-            ):
+    # 5. Citations & Visual Table Grounding
+    with st.expander(
+        f"📑 Grounded Policy Citations & Visual Table Inspector ({len(resp.citations)} sources)",
+        expanded=True,
+    ):
+        if resp.citations:
+            for idx, cit in enumerate(resp.citations):
+                st.markdown(
+                    f"**Citation {idx + 1}: [{cit.clause_code or f'Page {cit.page_number}'}] {cit.section_title}**"
+                )
                 cit_col1, cit_col2 = st.columns([2, 1])
                 with cit_col1:
-                    st.markdown(f'**Verbatim Quote:**\n> *"{cit.verbatim_quote}"*')
-                    st.markdown(
-                        f"**Parent Section Context:**\n```\n{cit.parent_context_preview}\n```"
-                    )
+                    st.markdown(f'**Verbatim Policy Quote:**\n> *"{cit.verbatim_quote}"*')
                     st.caption(
-                        f"Doc: `{cit.doc_id}` | Parent: `{cit.parent_id}` | Relevance: `{cit.relevance_score:.4f}`"
+                        f"Page {cit.page_number} | Doc ID: `{cit.doc_id}` | Parent Chunk: `{cit.parent_id}` | Relevance Score: `{cit.relevance_score:.4f}`"
                     )
                 with cit_col2:
                     if cit.image_crop_url:
@@ -196,18 +243,19 @@ if st.button("Submit Query", type="primary") and user_query:
                                 str(crop_path),
                                 caption=f"200-DPI Visual Table (Page {cit.page_number})",
                             )
-    else:
-        st.info("No citations available for this response.")
+                st.markdown("---")
+        else:
+            st.info("No policy citations were retrieved for this query.")
 
-    # 7. OpenTelemetry Execution Waterfall
-    st.markdown("#### OpenTelemetry Execution Waterfall")
-    waterfall_rows: list[dict[str, Any]] = [
-        {
-            "Span Name": s.name,
-            "Start Offset (ms)": s.start_offset_ms,
-            "Duration (ms)": s.duration_ms,
-            "Status": s.status,
-        }
-        for s in resp.trace_spans
-    ]
-    st.dataframe(waterfall_rows, use_container_width=True)
+    # 6. OpenTelemetry Execution Waterfall
+    with st.expander("⏱️ OpenTelemetry Execution Waterfall", expanded=False):
+        waterfall_rows: list[dict[str, Any]] = [
+            {
+                "Span Name": s.name,
+                "Start Offset (ms)": s.start_offset_ms,
+                "Duration (ms)": s.duration_ms,
+                "Status": s.status,
+            }
+            for s in resp.trace_spans
+        ]
+        st.dataframe(waterfall_rows, use_container_width=True)

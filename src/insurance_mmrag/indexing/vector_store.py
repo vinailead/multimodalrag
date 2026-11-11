@@ -9,7 +9,6 @@ from qdrant_client.models import (
     Distance,
     FieldCondition,
     Filter,
-    MatchAny,
     MatchValue,
     PointStruct,
     VectorParams,
@@ -99,17 +98,10 @@ class HybridVectorStore:
         if not self._chunks:
             return []
 
-        # 1. Build Qdrant pre-filter
+        # 1. Build Qdrant pre-filter (filter by doc_id to ensure document isolation)
         conditions: list[FieldCondition] = []
         if doc_id:
             conditions.append(FieldCondition(key="doc_id", match=MatchValue(value=doc_id)))
-        if target_sections:
-            conditions.append(
-                FieldCondition(
-                    key="section_type",
-                    match=MatchAny(any=[s.value for s in target_sections]),
-                )
-            )
 
         qdrant_filter = Filter(must=cast(list[Any], conditions)) if conditions else None
 
@@ -134,11 +126,8 @@ class HybridVectorStore:
         if self._bm25 and q_tokens:
             scores = list(self._bm25.get_scores(q_tokens))
             for cid, sc in zip(self._chunk_ids_order, scores, strict=True):
-                # Apply section filtering to BM25 candidate as well
                 chunk = self._chunks[cid]
                 if doc_id and chunk.metadata.doc_id != doc_id:
-                    continue
-                if target_sections and chunk.metadata.section_type not in target_sections:
                     continue
                 if sc > 0.0:
                     bm25_scores[cid] = float(sc)
@@ -149,7 +138,7 @@ class HybridVectorStore:
 
         all_candidates = set(dense_ranked) | set(bm25_ranked)
         if not all_candidates:
-            # Fallback: take top dense matches without strict section filter
+            # Fallback: take top dense matches without strict filter
             dense_unfiltered = self.client.query_points(
                 collection_name=COLLECTION_NAME,
                 query=query_vector,
@@ -165,6 +154,7 @@ class HybridVectorStore:
 
         rrf_scores: dict[str, float] = {}
         clause_set = set(detected_clause_codes or [])
+        target_section_set = set(target_sections or [])
 
         for cid in all_candidates:
             score = 0.0
@@ -176,6 +166,10 @@ class HybridVectorStore:
                 score += 1.0 / (rrf_k + rank_bm25)
 
             chunk = self._chunks[cid]
+            # Target Section Boost (+0.04) — prioritizes routed sections without blinding retrieval
+            if target_section_set and chunk.metadata.section_type in target_section_set:
+                score += 0.04
+
             # Exact clause code boost (e.g. Excl01 ranked #1)
             if chunk.metadata.clause_code and chunk.metadata.clause_code in clause_set:
                 score += 0.05

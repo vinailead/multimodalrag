@@ -187,7 +187,8 @@ INTENT_CUES: tuple[tuple[SectionType, re.Pattern[str]], ...] = tuple(
     for section, pattern in (
         (
             SectionType.WAITING_PERIODS,
-            r"waiting|how\s+long|months?|years?\s+after|pre-?existing|\bPED\b|Excl\s?0?[123]\b",
+            r"waiting|how\s+long|months?|years?\s+after|pre-?existing|\bPED\b|Excl\s?0?[123]\b|"
+            r"cataract|hernia|hydrocele|piles|sinusitis|joint\s+replacement",
         ),
         (
             SectionType.EXCLUSIONS,
@@ -196,7 +197,7 @@ INTENT_CUES: tuple[tuple[SectionType, re.Pattern[str]], ...] = tuple(
         (
             SectionType.SCHEDULE_OF_BENEFITS,
             r"room\s+rent|\bICU\b|sub-?limit|\blimit|sum\s+insured|lakh|₹|rs\.?|%|percent|"
-            r"plan|variant|slab|how\s+much|amount",
+            r"plan|variant|slab|how\s+much|amount|cataract",
         ),
         (
             SectionType.COST_SHARING,

@@ -169,10 +169,13 @@ def create_default_pipeline(
     redactor = PiiRedactor()
     sanitizer = PdfSanitizer(max_size_mb=cfg.max_pdf_size_mb)
 
-    if use_stub or cfg.use_stub_model or not api_key:
+    effective_api_key = api_key or (
+        cfg.gemini_api_key.get_secret_value() if cfg.gemini_api_key else None
+    )
+    if use_stub or cfg.use_stub_model or not effective_api_key:
         client = StubGeminiClient()
     else:
-        client = GeminiClient(api_key=api_key)
+        client = GeminiClient(api_key=effective_api_key)
 
     gateway = ModelGateway(
         client=client,
