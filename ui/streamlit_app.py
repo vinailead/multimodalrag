@@ -32,35 +32,41 @@ st.set_page_config(
 def get_cached_pipeline(
     api_key: str | None = None, use_stub: bool = True
 ) -> InsuranceMMRAGPipeline:
-    import contextlib
-    import json
-
     settings = get_settings()
     pipe = create_default_pipeline(settings=settings, use_stub=use_stub, api_key=api_key)
 
-    manifest_file = settings.raw_policies_dir / "manifest.json"
+    p1 = settings.raw_policies_dir / "arogya_sanjeevani_policy_wordings.pdf"
+    if not p1.exists():
+        create_arogya_sanjeevani_pdf(p1)
+    pipe.ingest_pdf(p1, doc_id="arogya_sanjeevani_national")
+
+    p2 = settings.raw_policies_dir / "saral_suraksha_bima.pdf"
+    if not p2.exists():
+        create_saral_suraksha_bima_pdf(p2)
+    pipe.ingest_pdf(p2, doc_id="saral_suraksha_hdfc_ergo")
+
+    return pipe
+
+
+def ensure_policy_ingested(pipe: InsuranceMMRAGPipeline, doc_id: str) -> None:
+    """Lazily ingest a provider PDF from manifest.json on demand when queried."""
+    if doc_id in pipe.get_indexed_documents():
+        return
+    import contextlib
+    import json
+
+    manifest_file = get_settings().raw_policies_dir / "manifest.json"
     if manifest_file.exists():
         with contextlib.suppress(Exception):
             entries = json.loads(manifest_file.read_text(encoding="utf-8"))
             for entry in entries:
-                file_path = Path(entry.get("file_path", ""))
-                if not file_path.is_absolute():
-                    file_path = Path.cwd() / file_path
-                if file_path.exists():
-                    pipe.ingest_pdf(file_path, doc_id=entry.get("doc_id"))
-
-    if not pipe.get_indexed_documents():
-        p1 = settings.raw_policies_dir / "arogya_sanjeevani_policy_wordings.pdf"
-        if not p1.exists():
-            create_arogya_sanjeevani_pdf(p1)
-        pipe.ingest_pdf(p1, doc_id="arogya_sanjeevani_national")
-
-        p2 = settings.raw_policies_dir / "saral_suraksha_bima.pdf"
-        if not p2.exists():
-            create_saral_suraksha_bima_pdf(p2)
-        pipe.ingest_pdf(p2, doc_id="saral_suraksha_hdfc_ergo")
-
-    return pipe
+                if entry.get("doc_id") == doc_id:
+                    file_path = Path(entry.get("file_path", ""))
+                    if not file_path.is_absolute():
+                        file_path = Path.cwd() / file_path
+                    if file_path.exists():
+                        pipe.ingest_pdf(file_path, doc_id=doc_id)
+                    break
 
 
 def render_advisor_section(rec: AdvisorRecommendationResponse) -> None:
@@ -150,11 +156,14 @@ pipeline = get_cached_pipeline(
     api_key=live_key if use_live_model else None, use_stub=not use_live_model
 )
 
-docs = pipeline.get_indexed_documents()
-policy_options = {doc.doc_id: f"{doc.policy_name} ({doc.uin})" for doc in docs.values()}
+all_catalog_cards = list_policy_cards()
+policy_options = {c.doc_id: f"{c.short_name} ({c.uin})" for c in all_catalog_cards}
 selected_doc_id = st.sidebar.selectbox(
     "Active Policy (for Specific Policy Q&A)",
     options=list(policy_options.keys()),
+    index=list(policy_options.keys()).index("arogya_sanjeevani_national")
+    if "arogya_sanjeevani_national" in policy_options
+    else 0,
     format_func=lambda x: policy_options.get(x, x),
 )
 
@@ -235,6 +244,8 @@ with tab_qa:
     if should_run_query:
         active_query_text = user_query_input.strip()
         with st.spinner("Analyzing policy clauses, exclusions, schedules, and underwriting rules..."):
+            if selected_doc_id:
+                ensure_policy_ingested(pipeline, selected_doc_id)
             resp: GroundedQueryResponse = pipeline.query(
                 active_query_text, doc_id=selected_doc_id
             )

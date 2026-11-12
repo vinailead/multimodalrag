@@ -701,3 +701,8 @@ def list_policy_cards(include_accident: bool = True) -> list[PolicyFeatureCard]:
     if not include_accident:
         return [c for c in cards if c.policy_category != "personal_accident"]
     return cards
+
+
+def list_health_policy_cards() -> list[PolicyFeatureCard]:
+    """Return all indemnity health PolicyFeatureCards (excluding Personal Accident)."""
+    return list_policy_cards(include_accident=False)

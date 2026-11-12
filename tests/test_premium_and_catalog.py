@@ -10,6 +10,7 @@ import pytest
 from insurance_mmrag.domain.policy_catalog import (
     POLICY_CATALOG,
     get_policy_card,
+    list_health_policy_cards,
     list_policy_cards,
 )
 from insurance_mmrag.domain.premium_calculator import PremiumCalculator
@@ -97,3 +98,16 @@ def test_portfolio_split_for_26yo_family_of_5_with_parents() -> None:
     assert nuclear_split.recommended_strategy == "SINGLE_FLOATER"
     assert nuclear_split.annual_savings_inr == 0
     assert len(POLICY_CATALOG) == 6
+    assert len(list_health_policy_cards()) == 5
+
+
+def test_streamlit_app_headless_execution() -> None:
+    from streamlit.testing.v1 import AppTest
+
+    at = AppTest.from_file(Path("ui/streamlit_app.py").resolve(), default_timeout=60)
+    at.run()
+    assert not at.exception
+
+    # Click the first sample query button (26yo family of 5 advisor query) and verify execution
+    at.button[0].click().run()
+    assert not at.exception
