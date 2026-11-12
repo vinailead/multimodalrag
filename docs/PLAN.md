@@ -231,14 +231,14 @@ Upgrade the Streamlit application (`ui/streamlit_app.py`) into the same 3-pillar
 - Updated `README.md`, `docs/SPEC.md`, `docs/STATUS.md`, `docs/RECURSIVE_WORKFLOW_LOG.md`, and `.agent/skills/indian-insurance-mmrag/SKILL.md`
 
 ### Success Criteria (Self-Verifiable Checkboxes)
-- [ ] **Streamlit Verification**: `uv run python -c "import ui.streamlit_app"` and headless smoke check verify zero syntax or runtime errors across all 3 tabs (Ask Policy Q&A, AI Policy Advisor, Compare Policies & Claim Simulator).
-- [ ] **Playwright Browser E2E Verification**: `npx playwright test` passes 100% in Chromium, verifying:
+- [x] **Streamlit Verification**: `uv run python -c "import ui.streamlit_app"` and headless smoke check verify zero syntax or runtime errors across all 3 tabs (Ask Policy Q&A, AI Policy Advisor, Compare Policies & Claim Simulator).
+- [x] **Playwright Browser E2E Verification**: `npx playwright test` passes 100% in Chromium, verifying:
   1. Consumer-friendly dashboard loads with the 3 product modes (*Ask Policy Q&A*, *AI Policy Advisor*, *Compare Policies*).
   2. Specific policy Q&A (e.g. *"Is cataract surgery included or excluded?"*) renders a direct, plain-English answer card with waiting period, ₹40,000 sub-limit, and PDF citation.
   3. Submitting the persona *"I am individual with age 26, non smoker and non drinker with family of 5 what is the best policy for me"* in the AI Advisor displays interactive probing questions, the Family Floater vs. Parent-Split advisory, and ranked policy cards with ₹ premiums.
   4. Answering the probing questions updates the recommendation and renders the Side-by-Side Comparison Matrix across providers with indicative premiums and out-of-pocket claim simulation.
   5. Adversarial out-of-scope queries and DPDP Act 2023 PII redaction continue to pass 100%.
-- [ ] **Master ADLC Quality Gate**: `npm run check` runs all 10 checks (`ruff check`, `ruff format`, `pyright`, `bandit`, `pytest >= 80%`, `eslint`, `prettier`, `tsc`, `vitest >= 80%`, `playwright`) and exits with code `0`.
+- [x] **Master ADLC Quality Gate**: `npm run check` runs all 10 checks (`ruff check`, `ruff format`, `pyright`, `bandit`, `pytest >= 80%`, `eslint`, `prettier`, `tsc`, `vitest >= 80%`, `playwright`) and exits with code `0`.
 
 ---
 

@@ -95,6 +95,7 @@ if ((runAll || tsOnly) && fs.existsSync(uiSrcDir)) {
 
 const e2eDir = path.join(repoRoot, "e2e");
 if ((runAll || e2eOnly) && fs.existsSync(e2eDir)) {
+  runStep("9b. Build Material 3 Web Bundle (Vite)", npxCmd, ["vite", "build"]);
   runStep("10. Browser End-to-End Tests (Playwright)", npxCmd, ["playwright", "test"]);
 }
 

@@ -1,5 +1,5 @@
 /**
- * TypeScript domain types mirroring backend Pydantic schemas.
+ * TypeScript domain types mirroring backend Pydantic schemas (`src/insurance_mmrag/schemas.py`).
  */
 
 export interface CostTelemetry {
@@ -53,12 +53,14 @@ export interface QueryIntentClassification {
   original_query: string;
   redacted_query: string;
   primary_section: string;
-  confidence: number;
+  confidence?: number;
   sub_queries: string[];
-  clause_codes: string[];
-  requires_table_search: boolean;
+  clause_codes?: string[];
+  detected_clause_codes?: string[];
+  requires_table_search?: boolean;
+  requires_table_boost?: boolean;
   requires_pro_escalation: boolean;
-  pii_detected: string[];
+  pii_detected?: string[];
 }
 
 export interface PrecedenceCheckResult {
@@ -71,58 +73,64 @@ export interface PrecedenceCheckResult {
 }
 
 export interface ApplicantProfile {
-  primary_age: number;
-  eldest_member_age: number;
+  proposer_age: number;
   family_size: number;
+  is_smoker: boolean;
+  is_drinker: boolean;
   includes_parents: boolean | null;
-  parents_eldest_age: number | null;
-  smoker: boolean;
-  drinker: boolean;
+  eldest_member_age: number | null;
   has_pre_existing_diseases: boolean | null;
   pre_existing_conditions: string[];
-  maternity_needed: boolean | null;
-  city_tier: "TIER_1_METRO" | "TIER_2" | "TIER_3" | null;
+  city_tier: "tier_1" | "tier_2" | "tier_3" | null;
   target_sum_insured_inr: number;
-  budget_priority: "LOWEST_PREMIUM" | "BALANCED" | "MAXIMUM_COVERAGE" | null;
+  budget_priority: "comprehensive_zero_copay" | "value_balanced" | "budget_low_premium" | null;
 }
 
 export interface PolicyFeatureCitation {
   doc_id: string;
-  policy_name: string;
-  section_title: string;
-  clause_code: string | null;
   page_number: number;
+  section_type: string;
+  clause_code: string | null;
   verbatim_quote: string;
 }
 
 export interface PolicyFeatureCard {
   doc_id: string;
   policy_name: string;
+  short_name: string;
   insurer_name: string;
   uin: string;
-  product_type: "HEALTH_INDIVIDUAL_FLOATER" | "PERSONAL_ACCIDENT";
-  positioning_tier: "ULTRA_COMPREHENSIVE" | "PREMIUM_METRO" | "BALANCED_FAMILY" | "VALUE_STANDARD";
-  eligible_sum_insured_options_inr: number[];
-  default_sum_insured_inr: number;
+  policy_category:
+    | "comprehensive_flagship"
+    | "value_comprehensive"
+    | "standard_irdai_health"
+    | "personal_accident";
+  tagline: string;
+  sum_insured_options_inr: number[];
+  day_1_cover_multiplier: number;
+  effective_cover_note: string;
   room_rent_limit: string;
-  room_rent_capped: boolean;
-  room_rent_max_pct_per_day: number | null;
-  room_rent_max_inr_per_day: number | null;
-  cataract_limit: string;
-  cataract_max_per_eye_inr: number | null;
+  has_room_rent_cap: boolean;
+  max_room_rent_per_day_inr: number | null;
+  room_rent_pct_of_si: number | null;
+  proportionate_deduction_applies: boolean;
+  icu_limit: string;
   ped_waiting_months: number;
   specific_disease_waiting_months: number;
   initial_waiting_days: number;
+  cataract_limit_description: string;
+  cataract_max_per_eye_inr: number | null;
   mandatory_copay_pct: number;
-  restoration_benefit: string;
-  no_claim_bonus: string;
   consumables_covered: boolean;
-  maternity_covered: boolean;
+  consumables_note: string;
+  restoration_benefit: string;
+  no_claim_bonus_note: string;
+  pre_post_hospitalization: string;
   ayush_coverage: string;
-  day_care_procedures: string;
-  modern_treatments_coverage: string;
-  key_highlights: string[];
-  watch_outs: string[];
+  healthy_lifestyle_discount_pct: number;
+  key_strengths: string[];
+  fine_print_warnings: string[];
+  best_for_persona: string;
   feature_citations: Record<string, PolicyFeatureCitation>;
 }
 
@@ -130,32 +138,34 @@ export interface PremiumBreakdown {
   doc_id: string;
   policy_name: string;
   sum_insured_inr: number;
-  eldest_age_used: number;
-  family_size_used: number;
+  effective_day_1_cover_inr: number;
+  pricing_age_used: number;
+  member_count: number;
+  city_tier: string;
   base_annual_premium_inr: number;
-  family_floater_load_inr: number;
+  floater_member_load_inr: number;
+  city_zone_adjustment_inr: number;
   healthy_lifestyle_discount_inr: number;
-  subtotal_before_gst_inr: number;
+  smoker_loading_inr: number;
+  net_premium_before_gst_inr: number;
   gst_18_pct_inr: number;
   total_annual_premium_inr: number;
   monthly_emi_inr: number;
+  cost_per_lakh_cover_inr: number;
   pricing_notes: string[];
 }
 
 export interface PortfolioSplitOption {
-  recommended: boolean;
+  recommended_strategy: "SPLIT_PORTFOLIO" | "SINGLE_FLOATER";
   headline: string;
-  rationale: string;
-  single_floater_doc_id: string;
+  explanation: string;
   single_floater_annual_inr: number;
-  young_family_doc_id: string;
-  young_family_policy_name: string;
-  young_family_annual_inr: number;
-  parents_doc_id: string;
-  parents_policy_name: string;
-  parents_annual_inr: number;
-  combined_split_annual_inr: number;
+  split_young_floater_annual_inr: number;
+  split_parents_floater_annual_inr: number;
+  split_total_annual_inr: number;
   annual_savings_inr: number;
+  combined_effective_cover_inr: number;
+  key_reasons_to_split: string[];
 }
 
 export interface ProbingQuestion {
@@ -164,74 +174,83 @@ export interface ProbingQuestion {
   question_text: string;
   why_it_matters: string;
   options: string[];
+  current_value?: string | null;
 }
 
 export interface RankedPolicyRecommendation {
   rank: number;
-  match_score_pct: number;
-  badge_label: string;
-  policy: PolicyFeatureCard;
+  badge: string;
+  match_score: number;
+  coverage_score: number;
+  waiting_period_score: number;
+  room_rent_score: number;
+  value_score: number;
+  feature_card: PolicyFeatureCard;
   premium: PremiumBreakdown;
-  why_this_fits: string[];
-  trade_offs: string[];
+  why_recommended_for_you: string[];
+  watch_out_for: string[];
 }
 
 export interface ComparisonCell {
   doc_id: string;
-  policy_name: string;
   display_value: string;
-  is_best_in_class: boolean;
-  sentiment: "POSITIVE" | "NEUTRAL" | "WARNING";
+  sentiment: "positive" | "neutral" | "warning" | "negative";
+  is_winner: boolean;
   citation: PolicyFeatureCitation | null;
 }
 
 export interface ComparisonRow {
   parameter_key: string;
   parameter_label: string;
-  category: string;
-  cells: ComparisonCell[];
+  consumer_tooltip: string;
+  cells: Record<string, ComparisonCell>;
 }
 
 export interface ClaimSimulationItem {
   doc_id: string;
   policy_name: string;
-  hospital_bill_inr: number;
+  short_name: string;
+  claimed_bill_inr: number;
   room_rent_deduction_inr: number;
-  sub_limit_deduction_inr: number;
+  procedure_sublimit_deduction_inr: number;
   consumables_deduction_inr: number;
   copay_deduction_inr: number;
   insurer_payable_inr: number;
-  out_of_pocket_inr: number;
+  user_out_of_pocket_inr: number;
+  coverage_ratio_pct: number;
   explanation: string;
 }
 
 export interface ClaimSimulationResponse {
   scenario_title: string;
-  hospital_bill_inr: number;
-  room_rent_per_day_inr: number;
-  stay_days: number;
-  is_cataract: boolean;
+  procedure_type: string;
+  claimed_bill_inr: number;
+  hospital_room_rent_per_day_inr: number;
+  days_hospitalized: number;
+  sum_insured_inr: number;
   results: ClaimSimulationItem[];
 }
 
 export interface PolicyComparisonResponse {
+  profile_used: ApplicantProfile;
   compared_policies: PolicyFeatureCard[];
   premiums: Record<string, PremiumBreakdown>;
   comparison_rows: ComparisonRow[];
   claim_simulation: ClaimSimulationResponse;
-  executive_verdict: string;
+  fiduciary_summary: string;
 }
 
 export interface AdvisorRecommendationResponse {
+  query: string;
   extracted_profile: ApplicantProfile;
-  profile_completeness_pct: number;
-  needs_more_info: boolean;
+  needs_probing: boolean;
+  completeness_pct: number;
   probing_questions: ProbingQuestion[];
-  portfolio_split_analysis: PortfolioSplitOption | null;
-  recommendations: RankedPolicyRecommendation[];
-  comparison_matrix: PolicyComparisonResponse;
-  advisory_summary: string;
-  irdai_disclaimer: string;
+  executive_advisory_summary: string;
+  portfolio_split_advice: PortfolioSplitOption;
+  ranked_policies: RankedPolicyRecommendation[];
+  comparison_matrix: ComparisonRow[];
+  claim_simulation: ClaimSimulationResponse;
 }
 
 export interface GroundedQueryResponse {
@@ -244,7 +263,7 @@ export interface GroundedQueryResponse {
   intent: QueryIntentClassification;
   citations: GroundedCitation[];
   cross_referenced_parents: string[];
-  crag_hops: number;
+  crag_hops: number | unknown[];
   precedence_check: PrecedenceCheckResult;
   pii_redactions_applied: string[];
   injection_detected: boolean;
@@ -260,9 +279,11 @@ export interface IndexedPolicy {
   insurer_name: string;
   uin: string;
   page_count: number;
-  sections_count: number;
+  sections_count?: number;
+  parents_count?: number;
+  children_count?: number;
   tables_count: number;
-  chunks_count: number;
+  chunks_count?: number;
 }
 
 export interface FinOpsSummary {

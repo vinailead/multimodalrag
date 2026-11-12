@@ -77,6 +77,11 @@ flowchart TB
 - Multi-factor confidence score ($0.45 \cdot S_{\text{retrieval}} + 0.35 \cdot S_{\text{llm}} + 0.20 \cdot S_{\text{citations}}$).
 - **Deterministic Abstention**: Queries with confidence $< 0.70$ safely abstain with IRDAI-compliant legal notices.
 
+### 7. Conversational Probing Underwriter, Multi-Policy Comparator & Claim Simulator (`V2 Product Engine`)
+- **Needs-Discovery Probing Advisor (`RecommendationEngine`)**: Parses applicant personas (e.g., *"I am individual with age 26, non smoker and non drinker with family of 5 what is the best policy for me"*), generates targeted follow-up questions (`includes_parents`, `has_pre_existing_diseases`, `city_tier`, `budget_priority`), detects the Indian **Family Floater Eldest-Member Age Trap** (`evaluate_portfolio_split`), and ranks policies with indicative GST-inclusive annual/monthly ₹ premiums and non-smoker/non-drinker discounts.
+- **Clause-Grounded Multi-Policy Comparator (`PolicyComparator`)**: Compares all listed providers side-by-side across 10 IRDAI dimensions with winner badges (`★ Best`) and PDF page citations.
+- **Hospital Bill Out-of-Pocket Simulator (`ClaimSimulator`)**: Models exact insurer payable vs. user out-of-pocket ₹ across policies for realistic hospital stays (room rent proportionate deduction, cataract sub-limits, ~8% non-medical consumables, and mandatory co-pay).
+
 ---
 
 ## 🔒 Security, Privacy & FinOps Governance

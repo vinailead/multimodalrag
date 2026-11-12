@@ -236,42 +236,47 @@ describe("API Client", () => {
 
   it("fetchAdvisorRecommendation posts query and returns AdvisorRecommendationResponse", async () => {
     const mockAdvisor = {
+      query: "26yo non smoker family of 5",
       extracted_profile: {
-        primary_age: 26,
-        eldest_member_age: 26,
+        proposer_age: 26,
+        eldest_member_age: null,
         family_size: 5,
         includes_parents: null,
-        parents_eldest_age: null,
-        smoker: false,
-        drinker: false,
+        is_smoker: false,
+        is_drinker: false,
         has_pre_existing_diseases: null,
         pre_existing_conditions: [],
-        maternity_needed: null,
         city_tier: null,
         target_sum_insured_inr: 1000000,
         budget_priority: null,
       },
-      profile_completeness_pct: 50,
-      needs_more_info: true,
+      completeness_pct: 50,
+      needs_probing: true,
       probing_questions: [],
-      portfolio_split_analysis: null,
-      recommendations: [],
-      comparison_matrix: {
-        compared_policies: [],
-        premiums: {},
-        comparison_rows: [],
-        claim_simulation: {
-          scenario_title: "Test",
-          hospital_bill_inr: 250000,
-          room_rent_per_day_inr: 9000,
-          stay_days: 4,
-          is_cataract: false,
-          results: [],
-        },
-        executive_verdict: "Verdict",
+      executive_advisory_summary: "Summary",
+      portfolio_split_advice: {
+        recommended_strategy: "SPLIT_PORTFOLIO",
+        headline: "Headline",
+        explanation: "Explanation",
+        single_floater_annual_inr: 45000,
+        split_young_floater_annual_inr: 15000,
+        split_parents_floater_annual_inr: 22000,
+        split_total_annual_inr: 37000,
+        annual_savings_inr: 8000,
+        combined_effective_cover_inr: 2000000,
+        key_reasons_to_split: [],
       },
-      advisory_summary: "Summary",
-      irdai_disclaimer: "Disclaimer",
+      ranked_policies: [],
+      comparison_matrix: [],
+      claim_simulation: {
+        scenario_title: "Test",
+        procedure_type: "general",
+        claimed_bill_inr: 250000,
+        hospital_room_rent_per_day_inr: 9000,
+        days_hospitalized: 4,
+        sum_insured_inr: 1000000,
+        results: [],
+      },
     };
 
     vi.spyOn(globalThis, "fetch").mockResolvedValueOnce({
@@ -281,10 +286,10 @@ describe("API Client", () => {
 
     const res = await fetchAdvisorRecommendation(
       "26yo non smoker family of 5",
-      { primary_age: 26 },
+      { proposer_age: 26 },
       { includes_parents: "No — Spouse & Kids only (all under 35)" },
     );
-    expect(res.extracted_profile.primary_age).toBe(26);
+    expect(res.extracted_profile.proposer_age).toBe(26);
     expect(res.extracted_profile.family_size).toBe(5);
 
     vi.spyOn(globalThis, "fetch").mockResolvedValueOnce({
@@ -298,18 +303,32 @@ describe("API Client", () => {
 
   it("fetchPolicyComparison posts doc_ids and profile and returns PolicyComparisonResponse", async () => {
     const mockComp = {
+      profile_used: {
+        proposer_age: 26,
+        family_size: 5,
+        is_smoker: false,
+        is_drinker: false,
+        includes_parents: null,
+        eldest_member_age: null,
+        has_pre_existing_diseases: null,
+        pre_existing_conditions: [],
+        city_tier: null,
+        target_sum_insured_inr: 1000000,
+        budget_priority: null,
+      },
       compared_policies: [],
       premiums: {},
       comparison_rows: [],
       claim_simulation: {
         scenario_title: "Test",
-        hospital_bill_inr: 250000,
-        room_rent_per_day_inr: 9000,
-        stay_days: 4,
-        is_cataract: false,
+        procedure_type: "general",
+        claimed_bill_inr: 250000,
+        hospital_room_rent_per_day_inr: 9000,
+        days_hospitalized: 4,
+        sum_insured_inr: 1000000,
         results: [],
       },
-      executive_verdict: "Comparison Verdict",
+      fiduciary_summary: "Comparison Verdict",
     };
 
     vi.spyOn(globalThis, "fetch").mockResolvedValueOnce({
@@ -317,8 +336,8 @@ describe("API Client", () => {
       json: async () => mockComp,
     } as Response);
 
-    const res = await fetchPolicyComparison(["hdfc_ergo_optima_secure"], { primary_age: 26 });
-    expect(res.executive_verdict).toBe("Comparison Verdict");
+    const res = await fetchPolicyComparison(["hdfc_ergo_optima_secure"], { proposer_age: 26 });
+    expect(res.fiduciary_summary).toBe("Comparison Verdict");
 
     vi.spyOn(globalThis, "fetch").mockResolvedValueOnce({
       ok: false,
@@ -330,10 +349,11 @@ describe("API Client", () => {
   it("fetchClaimSimulation posts hospital scenario and returns ClaimSimulationResponse", async () => {
     const mockSim = {
       scenario_title: "Cardiac",
-      hospital_bill_inr: 250000,
-      room_rent_per_day_inr: 9000,
-      stay_days: 4,
-      is_cataract: false,
+      procedure_type: "cardiac",
+      claimed_bill_inr: 250000,
+      hospital_room_rent_per_day_inr: 9000,
+      days_hospitalized: 4,
+      sum_insured_inr: 1000000,
       results: [],
     };
 
@@ -343,12 +363,11 @@ describe("API Client", () => {
     } as Response);
 
     const res = await fetchClaimSimulation({
-      hospital_bill_inr: 250000,
-      room_rent_per_day_inr: 9000,
-      stay_days: 4,
-      is_cataract: false,
+      claimed_bill_inr: 250000,
+      hospital_room_rent_per_day_inr: 9000,
+      days_hospitalized: 4,
     });
-    expect(res.hospital_bill_inr).toBe(250000);
+    expect(res.claimed_bill_inr).toBe(250000);
 
     vi.spyOn(globalThis, "fetch").mockResolvedValueOnce({
       ok: false,
@@ -356,10 +375,9 @@ describe("API Client", () => {
     } as Response);
     await expect(
       fetchClaimSimulation({
-        hospital_bill_inr: 100000,
-        room_rent_per_day_inr: 5000,
-        stay_days: 2,
-        is_cataract: true,
+        claimed_bill_inr: 100000,
+        hospital_room_rent_per_day_inr: 5000,
+        days_hospitalized: 2,
       }),
     ).rejects.toThrow("Failed to simulate claim");
   });

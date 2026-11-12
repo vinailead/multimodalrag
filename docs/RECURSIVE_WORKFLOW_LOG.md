@@ -135,4 +135,16 @@ This file implements the **Recursive Workflow Planning** memory loop. Every time
   1. Selecting `.m3-pill` globally in `main.ts` would match both Sample Query pills and Probing Option buttons unless scoped with `.m3-pill[data-query]`. Scoping sample query pill listeners to `.m3-pill[data-query]` prevents collision with `.m3-probe-option` pills and Product Mode navigation tabs.
 - **Recursive Action Taken**:
   1. Updated `ui/web/index.html`, `ui/web/src/types.ts`, `ui/web/src/api.ts`, `ui/web/src/components.ts`, and `ui/web/src/main.ts` with 3-Mode Product Navigation (`#tab-qa`, `#tab-advisor`, `#tab-compare`), interactive probing cards (`renderProbingQuestions`), portfolio split banner (`renderPortfolioSplitBanner`), ranked policy cards (`renderRecommendationCards`), side-by-side comparison matrix (`renderComparisonMatrix`), and claim simulator (`renderClaimSimulation`).
-  2. Verified 28/28 Vitest tests pass at 99.43% coverage.
+  2. Verified 28/28 Vitest tests pass at 99.44% coverage.
+
+---
+
+## Log Entry #016 — V2 Phase 6: Vite Static Bundle Synchronization & End-to-End Schema Contract Verification
+- **Timestamp**: `2026-11-12T13:05:00+05:30`
+- **Observation**:
+  1. FastAPI (`src/insurance_mmrag/api/main.py`) serves the production frontend bundle from `dist/` during Playwright E2E runs (`http://127.0.0.1:8000`). Running `npx vite build` automatically in `scripts/check.mjs` right before `npx playwright test` ensures that any modifications to `ui/web/index.html` or `ui/web/src/*.ts` are always reflected in `dist/` before Chromium launches.
+  2. Playwright E2E tests verified the live JSON contract between Pydantic (`src/insurance_mmrag/schemas.py`) and TypeScript (`ui/web/src/types.ts`), ensuring 1-to-1 field alignment (`ranked_policies`, `portfolio_split_advice`, `completeness_pct`, `cells: Record<string, ComparisonCell>`, `claimed_bill_inr`, `user_out_of_pocket_inr`).
+- **Recursive Action Taken**:
+  1. Added step `9b. Build Material 3 Web Bundle (Vite)` to `scripts/check.mjs`.
+  2. Upgraded `ui/streamlit_app.py` into a 3-Tab Consumer Product experience (Ask Policy Q&A, AI Policy Advisor & Probing Wizard, Compare Policies & Hospital Bill Simulator) using `width="stretch"` and `contextlib.suppress`.
+  3. Expanded `e2e/mmrag.spec.ts` to 8 Chromium E2E tests and verified 100% pass across all 10 ADLC quality gates.

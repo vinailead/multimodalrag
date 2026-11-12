@@ -178,3 +178,6 @@ class GroundedQueryResponse(BaseModel):
 | `GET` | `/api/v1/crops/{crop_filename}` | Path param `crop_filename` | `FileResponse` (`image/png`) |
 | `GET` | `/api/v1/telemetry/cost` | None | `FinOpsSummaryResponse` (Total USD/INR, cache hit ratio, per-model breakdown) |
 | `GET` | `/api/v1/governance/audit` | Query param `limit: int = 50` | `list[AuditLogEntry]` |
+| `POST` | `/api/v1/advisor/recommend` | `AdvisorRecommendRequest` (`user_query`, `profile`, `probing_answers`) | `AdvisorRecommendationResponse` |
+| `POST` | `/api/v1/policies/compare` | `PolicyCompareRequest` (`doc_ids`, `profile`) | `PolicyComparisonResponse` |
+| `POST` | `/api/v1/policies/simulate-claim` | `ClaimSimulateRequest` (`hospital_bill_inr`, `room_rent_per_day_inr`, `stay_days`, `is_cataract`) | `ClaimSimulationResponse` |

@@ -100,9 +100,10 @@ export async function fetchAdvisorRecommendation(
   profile?: Partial<ApplicantProfile>,
   probingAnswers?: Record<string, string>,
 ): Promise<AdvisorRecommendationResponse> {
+  const extraParts = probingAnswers ? Object.values(probingAnswers).join(". ") : "";
+  const effectiveQuery = extraParts ? `${userQuery}. ${extraParts}` : userQuery;
   const payload: Record<string, unknown> = {
-    user_query: userQuery,
-    probing_answers: probingAnswers ?? {},
+    query: effectiveQuery,
   };
   if (profile) {
     payload.profile = profile;
@@ -142,10 +143,10 @@ export async function fetchPolicyComparison(
 
 export async function fetchClaimSimulation(params: {
   doc_ids?: string[];
-  hospital_bill_inr: number;
-  room_rent_per_day_inr: number;
-  stay_days: number;
-  is_cataract: boolean;
+  claimed_bill_inr: number;
+  hospital_room_rent_per_day_inr: number;
+  days_hospitalized: number;
+  procedure_type?: string;
   sum_insured_inr?: number;
 }): Promise<ClaimSimulationResponse> {
   const resp = await fetch(`${BASE_URL}/api/v1/policies/simulate-claim`, {

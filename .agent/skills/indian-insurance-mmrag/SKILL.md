@@ -43,3 +43,6 @@ Never use generic fixed-window chunking on Indian insurance PDFs. Always run a *
    - Tests must use `StubGeminiClient` and never call a live model.
    - `npm run check` must pass Python (`ruff`, `pyright`, `bandit`, `pytest` $\ge 80\%$ cov), TypeScript (`eslint`, `prettier`, `tsc`, `vitest` $\ge 80\%$ cov), and `Playwright` E2E checks before handing work over.
    - Log every new edge case in `docs/RECURSIVE_WORKFLOW_LOG.md`.
+8. **Conversational Needs-Discovery Probing & Multi-Policy Comparator**:
+   - **Probing Underwriter (`RecommendationEngine`)**: Extracts applicant profile slots from natural language (e.g., age 26, non-smoker, non-drinker, family of 5), asks targeted follow-up questions (`includes_parents`, `has_pre_existing_diseases`, `city_tier`, `budget_priority`), evaluates Single Floater vs. Parent-Split Portfolio savings (`evaluate_portfolio_split`), and ranks policies with GST-inclusive annual/monthly ₹ premiums.
+   - **Multi-Policy Comparator & Claim Simulator (`PolicyComparator`, `ClaimSimulator`)**: Compares all listed providers side-by-side across 10 IRDAI dimensions with PDF page citations and simulates out-of-pocket hospital bill deductions.

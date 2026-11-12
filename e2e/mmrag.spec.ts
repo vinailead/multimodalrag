@@ -135,4 +135,46 @@ test.describe("Indian Insurance Multimodal RAG — Material Design 3 E2E Tests",
       "What is the daily room rent sub-limit and mandatory co-payment percentage?",
     );
   });
+
+  test("7. Asking 26yo non-smoker family of 5 persona triggers Probing Advisor, Portfolio Split, and Ranked Policies with Premiums", async ({
+    page,
+  }) => {
+    await page.goto("/");
+
+    const advisorPill = page.locator("#pill-advisor-demo");
+    await advisorPill.click();
+
+    await page.locator("#query-submit-btn").click();
+
+    // Verify Grounded Answer Card and AI Advisor Recommendation View appear
+    await expect(page.locator("#answer-card")).toBeVisible({ timeout: 15000 });
+    const advisorView = page.locator("#advisor-recommendation-view");
+    await expect(advisorView).toBeVisible({ timeout: 15000 });
+
+    // Verify Probing Questions Card and Portfolio Split Banner
+    await expect(page.locator("#probing-questions-card")).toBeVisible();
+    await expect(page.locator("#portfolio-split-banner")).toBeVisible();
+
+    // Verify Ranked Recommendation Cards with ₹ premiums
+    const topRec = page.locator('[data-testid="rec-card-1"]');
+    await expect(topRec).toBeVisible();
+    await expect(topRec).toContainText("₹");
+
+    // Verify Comparison Matrix Table and Claim Simulator are rendered
+    await expect(page.locator("#comparison-matrix-table")).toBeVisible();
+    await expect(page.locator("#claim-simulation-card")).toBeVisible();
+  });
+
+  test("8. Clicking Compare All Policies & Claim Simulator tab renders Side-by-Side Comparison Matrix", async ({
+    page,
+  }) => {
+    await page.goto("/");
+
+    await page.locator("#tab-compare").click();
+
+    const compareSlot = page.locator("#comparison-results-slot");
+    await expect(compareSlot).toBeVisible({ timeout: 15000 });
+    await expect(compareSlot.locator("#comparison-matrix-table")).toBeVisible();
+    await expect(compareSlot.locator("#claim-simulation-card")).toBeVisible();
+  });
 });
